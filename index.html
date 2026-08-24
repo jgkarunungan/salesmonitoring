@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JGB Business Hub</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="min-h-screen flex flex-col">
+
+<!-- Header (Fixed Height) -->
+<header class="p-4 lg:p-6 sticky top-0 z-20 bg-white border-b border-gray-200 shadow-sm shrink-0 lg:h-[88px]">
+    <div class="flex justify-between items-center max-w-[1600px] mx-auto">
+        <div>
+            <h1 id="viewTitle" class="text-xl lg:text-2xl font-black text-info-blue uppercase tracking-wide font-mont">JGB Business Hub</h1>
+            <p id="currentDate" class="text-xs text-gray-400 uppercase tracking-widest font-semibold mt-0.5"></p>
+        </div>
+
+        <!-- Desktop Navigation -->
+        <div class="hidden lg:flex items-center gap-8">
+            <button id="deskNavHome" onclick="switchTab('home')" class="desktop-nav text-info-blue font-black uppercase tracking-widest text-sm transition-colors hover:text-info-blue">Home Tools</button>
+            <button id="deskNavStats" onclick="switchTab('stats')" class="hidden desktop-nav text-gray-400 font-bold uppercase tracking-widest text-sm transition-colors hover:text-info-blue">Dashboard Report</button>
+            <button id="deskNavHistory" onclick="switchTab('history')" class="desktop-nav text-gray-400 font-bold uppercase tracking-widest text-sm transition-colors hover:text-info-blue">System Logs</button>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <button id="settingsBtn" onclick="openSettingsModal()" class="hidden bg-gray-100 text-gray-500 p-2 rounded-xl border border-gray-200 hover:bg-gray-200 transition-colors" title="Account Settings">
+                ⚙️
+            </button>
+            <button id="modeBtn" onclick="toggleRole()" class="bg-gray-100 text-gray-500 px-3 py-2 rounded-xl text-xs font-bold border border-gray-200 hover:bg-gray-200 transition-colors flex items-center gap-2">
+                <span id="modeBtnText">Log In</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            </button>
+        </div>
+    </div>
+</header>
+
+<!-- TAB: HOME -->
+<main id="homeTab" class="tab-content active flex-1 w-full bg-info-blue lg:h-[calc(100vh-88px)] overflow-y-auto custom-scrollbar light-scrollbar">
+    <div class="bg-white px-6 py-8 flex flex-col lg:flex-row items-center justify-center gap-6 shadow-sm border-b border-gray-200">
+        <div class="text-[#1e3a8a] hidden lg:block">
+            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="currentColor"><path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.1L7.6 4.8 5.5 2.7 4.1 4.1l2.1 2.1L3.3 9c-1.3 2.3-.9 5.4 1.1 7.4 1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l1.4-1.4c.4-.4.4-1 0-1.4zM8.3 12c-1.1 1.1-2.9 1.1-4 0-1.1-1.1-1.1-2.9 0-4 1.1-1.1 2.9-1.1 4 0 1.1 1.1 1.1 2.9 0 4z"/></svg>
+        </div>
+        <div class="text-center lg:text-left font-mont">
+            <h2 class="text-2xl lg:text-4xl font-black text-[#1e3a8a] uppercase tracking-wide">Workspace</h2>
+            <h2 class="text-2xl lg:text-4xl font-black text-info-green uppercase tracking-wide mt-1">Data Entry Tools</h2>
+        </div>
+    </div>
+
+    <div class="flex-1 flex flex-col lg:flex-row p-6 lg:p-12 gap-8 lg:gap-12 w-full max-w-[1600px] mx-auto">
+        <section class="flex-1 flex flex-col gap-6">
+            <h3 class="text-info-green font-mont font-bold text-lg lg:text-xl uppercase tracking-widest text-center lg:text-left">Vending Machines</h3>
+            <div class="grid grid-cols-2 lg:grid-cols-1 gap-4 lg:gap-6">
+                <button onclick="openPisonetModal()" class="flex flex-col items-center justify-center bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 active:scale-95 transition-all p-8 rounded-[2rem] shadow-lg">
+                    <span class="text-5xl mb-4">🕹️</span>
+                    <span class="font-mont font-bold text-white tracking-widest uppercase">Pisonet</span>
+                </button>
+                <button onclick="openPisoWifiModal()" class="flex flex-col items-center justify-center bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 active:scale-95 transition-all p-8 rounded-[2rem] shadow-lg">
+                    <span class="text-5xl mb-4">📶</span>
+                    <span class="font-mont font-bold text-white tracking-widest uppercase">PisoWiFi</span>
+                </button>
+                <button onclick="openCoffeeModal()" class="col-span-2 lg:col-span-1 flex flex-col items-center justify-center bg-orange-900/20 border border-orange-500/30 hover:bg-orange-900/30 hover:border-orange-500/50 active:scale-95 transition-all p-8 rounded-[2rem] shadow-lg relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-3">
+                        <span class="bg-orange-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter shadow-sm group-hover:scale-110 transition-transform">New Machine</span>
+                    </div>
+                    <span class="text-5xl mb-4">☕</span>
+                    <span class="font-mont font-bold text-orange-200 tracking-widest uppercase">Coffee Vendo</span>
+                </button>
+            </div>
+        </section>
+
+        <div class="hidden lg:block w-px bg-white/10 self-stretch"></div>
+        <hr class="border-white/10 lg:hidden">
+
+        <section class="flex-1 flex flex-col gap-6">
+            <h3 class="text-info-green font-mont font-bold text-lg lg:text-xl uppercase tracking-widest text-center lg:text-left">Manual Printing</h3>
+            <div class="bg-white/5 border border-white/10 p-6 lg:p-8 rounded-[2rem] space-y-5 shadow-lg flex-1">
+                <div class="space-y-1">
+                    <label class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Price to Charge (₱)</label>
+                    <input id="pAmount" type="number" placeholder="0.00" class="w-full bg-black/20 border border-white/10 p-5 rounded-xl font-black text-info-green text-3xl text-center focus:border-info-green placeholder-white/20 text-white transition-colors">
+                </div>
+                <div class="space-y-1 relative">
+                    <label class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Print Job Type</label>
+                    <select id="pDesc" onchange="toggleOtherPrintInput()" class="w-full bg-black/20 border border-white/10 p-4 rounded-xl text-sm font-bold text-white focus:border-info-green transition-colors appearance-none cursor-pointer">
+                        <option value="" disabled selected class="text-gray-500">Select Print Job...</option>
+                        <option value="Photocopy" class="bg-[#1e3a8a] text-white">Photocopy</option>
+                        <option value="Print (Text only, Colored)" class="bg-[#1e3a8a] text-white">Print (Text only, Colored)</option>
+                        <option value="Print (Text only)" class="bg-[#1e3a8a] text-white">Print (Text only)</option>
+                        <option value="Print (Colored Image)" class="bg-[#1e3a8a] text-white">Print (Colored Image)</option>
+                        <option value="Print (Text with Images)" class="bg-[#1e3a8a] text-white">Print (Text with Images)</option>
+                        <option value="Others" class="bg-[#1e3a8a] text-white">Others (Specify below)</option>
+                    </select>
+                </div>
+                <input id="pOtherDesc" type="text" placeholder="Specify print job..." class="hidden w-full bg-black/20 border border-white/10 p-4 rounded-xl text-sm focus:border-info-green placeholder-white/30 text-white transition-colors">
+                <div class="flex gap-3 mt-6">
+                    <button onclick="openRegisterModal()" class="w-16 shrink-0 bg-white/10 text-white font-mont font-black rounded-xl border border-white/20 hover:bg-white/20 active:scale-[0.98] transition-all flex items-center justify-center text-2xl shadow-lg" title="Open Cash Register">🧮</button>
+                    <button onclick="logPrint()" class="flex-1 bg-info-green text-[#1e3a8a] font-mont font-black py-5 rounded-xl shadow-[0_0_15px_rgba(0,230,118,0.3)] hover:opacity-90 active:scale-[0.98] transition-all text-lg uppercase tracking-widest">Save Income</button>
+                </div>
+            </div>
+        </section>
+
+        <div class="hidden lg:block w-px bg-white/10 self-stretch"></div>
+        <hr class="border-white/10 lg:hidden">
+
+        <section class="flex-1 flex flex-col gap-6">
+            <div class="flex justify-between items-center text-center lg:text-left w-full">
+                <h3 class="text-red-400 font-mont font-bold text-lg lg:text-xl uppercase tracking-widest flex-1">Shop Expenses</h3>
+                <button onclick="toggleExpenseForm()" class="lg:hidden text-white/50 p-2"><svg id="expChevron" class="transition-transform duration-300 rotate-180" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></button>
+            </div>
+            <div id="expenseForm" class="bg-white/5 border border-white/10 p-6 lg:p-8 rounded-[2rem] space-y-5 shadow-lg flex-1">
+                <div class="space-y-1 relative">
+                    <label class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Branch / Location</label>
+                    <select id="expLocation" class="w-full bg-black/20 border border-white/10 p-4 rounded-xl text-sm font-bold text-white focus:border-red-400 transition-colors appearance-none cursor-pointer">
+                        <option value="General" class="bg-[#1e3a8a] text-white">General / All Shops</option>
+                    </select>
+                </div>
+                <div class="space-y-1 relative">
+                    <label class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Expense Category</label>
+                    <select id="expCategory" onchange="toggleOtherExpenseInput()" class="w-full bg-black/20 border border-white/10 p-4 rounded-xl text-sm font-bold text-white focus:border-red-400 transition-colors appearance-none cursor-pointer">
+                        <option value="" disabled selected class="text-gray-500">Select Category...</option>
+                        <option value="Electricity (ALECO)" class="bg-[#1e3a8a] text-white">Electricity (ALECO)</option>
+                        <option value="Internet (DCTV)" class="bg-[#1e3a8a] text-white">Internet (DCTV)</option>
+                        <option value="Water Bill" class="bg-[#1e3a8a] text-white">Water Bill</option>
+                        <option value="Shop Supplies" class="bg-[#1e3a8a] text-white">Shop Supplies (Ink, Paper)</option>
+                        <option value="Maintenance" class="bg-[#1e3a8a] text-white">Maintenance / Repairs</option>
+                        <option value="Others" class="bg-[#1e3a8a] text-white">Others (Specify below)</option>
+                    </select>
+                </div>
+                <input id="expOtherDesc" type="text" placeholder="Specify other expense..." class="hidden w-full bg-black/20 border border-white/10 p-4 rounded-xl text-sm focus:border-red-400 placeholder-white/30 text-white transition-colors">
+                <div class="space-y-1">
+                    <label class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Amount Paid (₱)</label>
+                    <input id="expAmt" type="number" placeholder="0.00" class="w-full bg-black/20 border border-white/10 p-5 rounded-xl font-black text-red-400 text-3xl text-center focus:border-red-400 placeholder-white/20 text-white transition-colors">
+                </div>
+                <div id="expenseDebtContainer" class="hidden flex items-center gap-2 bg-orange-500/10 border border-orange-500/20 p-3 rounded-xl mt-2">
+                    <input type="checkbox" id="expIsDebt" class="w-5 h-5 accent-orange-500 cursor-pointer">
+                    <label for="expIsDebt" class="text-xs text-orange-200 font-medium cursor-pointer">Remind me to collect partner's 50% share later</label>
+                </div>
+                <button onclick="logExpense()" class="w-full bg-red-500 text-white font-mont font-black py-5 rounded-xl shadow-[0_0_15px_rgba(239,68,68,0.3)] hover:bg-red-600 active:scale-[0.98] transition-all mt-6 text-lg uppercase tracking-widest">Save Expense</button>
+            </div>
+        </section>
+    </div>
+    <div class="h-24 mobile-spacer"></div>
+</main>
+
+<!-- TAB: STATS -->
+<main id="statsTab" class="tab-content flex-1 w-full bg-info-blue lg:h-[calc(100vh-88px)] overflow-y-auto custom-scrollbar light-scrollbar">
+    <div class="bg-white px-6 py-8 flex flex-col lg:flex-row items-center justify-center gap-6 shadow-sm border-b border-gray-200">
+        <div class="text-center lg:text-left font-mont">
+            <h2 class="text-2xl lg:text-4xl font-black text-[#1e3a8a] uppercase tracking-wide">JGB Business Hub</h2>
+            <h2 class="text-2xl lg:text-4xl font-black text-info-green uppercase tracking-wide mt-1"><span id="reportFilterLabel">Monthly</span> Performance Report</h2>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-2 ml-auto lg:min-w-[300px] w-full lg:w-auto mt-4 lg:mt-0">
+            <select id="dashboardBranchFilter" onchange="applyInfographicFilter()" class="w-full sm:w-auto bg-blue-900 border border-blue-400 p-3 rounded-xl text-sm font-bold text-white"><option value="all">Both Branches</option><option value="Cabagñan">Cabagñan Branch</option><option value="Iraya">Iraya Branch</option></select>
+            <select id="infographicFilter" onchange="applyInfographicFilter()" class="w-full sm:w-auto bg-gray-50 border border-gray-200 p-3 rounded-xl text-sm font-bold text-[#1e3a8a]"><option value="monthly">By Month</option><option value="weekly">Last 7 Days</option><option value="yearly">Entire Year</option><option value="custom">Custom Date</option></select>
+            <input type="month" id="statMonthPicker" onchange="applyInfographicFilter()" class="w-full sm:w-auto bg-gray-50 border border-gray-200 p-3 rounded-xl text-sm font-bold text-[#1e3a8a]">
+            <input type="number" id="statYearPicker" placeholder="YYYY" onchange="applyInfographicFilter()" class="hidden w-full sm:w-auto bg-gray-50 border border-gray-200 p-3 rounded-xl text-sm font-bold text-[#1e3a8a]">
+            <div id="statCustomPicker" class="hidden flex flex-col sm:flex-row gap-2 w-full sm:w-auto items-center"><input type="date" id="statStartDate" onchange="applyInfographicFilter()" class="w-full sm:w-auto bg-gray-50 border border-gray-200 p-3 rounded-xl text-sm font-bold text-[#1e3a8a]"><span class="text-xs font-bold text-gray-400">TO</span><input type="date" id="statEndDate" onchange="applyInfographicFilter()" class="w-full sm:w-auto bg-gray-50 border border-gray-200 p-3 rounded-xl text-sm font-bold text-[#1e3a8a]"></div>
+        </div>
+    </div>
+
+    <div class="flex-1 p-6 lg:p-10 w-full max-w-[1600px] mx-auto space-y-8">
+        
+        <!-- ZONE 1: THE EXECUTIVE BAR -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-white/10 border border-white/20 p-5 rounded-[2rem] shadow-lg text-center">
+                <span class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-1">My Net Profit</span>
+                <span id="infoNetProfit" class="text-2xl lg:text-3xl font-black text-info-green">₱0</span>
+            </div>
+            <div class="bg-white/10 border border-white/20 p-5 rounded-[2rem] shadow-lg text-center">
+                <span class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-1">Total Gross</span>
+                <span id="infoTotalGross" class="text-2xl lg:text-3xl font-black text-white">₱0</span>
+            </div>
+            <div class="bg-white/10 border border-white/20 p-5 rounded-[2rem] shadow-lg text-center">
+                <span class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-1">Total Expenses</span>
+                <span id="sumAllExpenses" class="text-2xl lg:text-3xl font-black text-red-400">₱0</span>
+            </div>
+            <div class="bg-white/10 border border-white/20 p-5 rounded-[2rem] shadow-lg text-center">
+                <span class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-1">Maint. Savings</span>
+                <span id="totalSavingsDisplay" class="text-2xl lg:text-3xl font-black text-blue-400">₱0</span>
+            </div>
+        </div>
+
+        <!-- ZONE 2: ANALYTICS & MATH -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left: Performance Visuals -->
+            <div class="lg:col-span-2 space-y-8">
+                <div class="bg-white/5 border border-white/10 p-6 rounded-[2.5rem] shadow-xl">
+                    <h3 class="text-white font-mont font-bold text-sm uppercase tracking-widest mb-6">Yearly Performance Trend</h3>
+                    <div class="h-[220px] w-full"><canvas id="performanceChart"></canvas></div>
+                </div>
+                <div class="bg-white/5 border border-white/10 p-6 rounded-[2.5rem] shadow-xl">
+                    <h3 class="text-info-green font-mont font-bold text-sm uppercase tracking-widest mb-6 text-center lg:text-left">Machine Revenue Distribution</h3>
+                    <div id="revenueDonutsContainer" class="grid grid-cols-2 lg:grid-cols-4 gap-4"></div>
+                </div>
+            </div>
+
+            <!-- Right: Revenue Math (The Table) -->
+            <div class="bg-white/5 border border-white/10 p-8 rounded-[2.5rem] shadow-xl flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="bg-black/20 p-2.5 rounded-xl text-white">🧮</div>
+                        <h4 class="text-white font-mont font-bold uppercase tracking-wider text-sm">Revenue Calculation</h4>
+                    </div>
+                    <div class="text-sm text-blue-100 font-medium space-y-4">
+                        <div class="flex justify-between items-center"><span class="text-gray-400">Total Business Gross</span><span id="mathGross" class="text-white font-bold">₱0</span></div>
+                        <div class="flex justify-between items-center"><span class="text-gray-400">Less Partner Cuts</span><span id="infoTotalPartnerCuts" class="text-orange-400 font-bold">-₱0</span></div>
+                        <hr class="border-white/10">
+                        <div class="flex justify-between items-center"><span class="text-gray-400">Your Share Gross</span><span id="infoMyGross" class="text-info-green font-bold">₱0</span></div>
+                        <div class="flex justify-between items-center"><span class="text-gray-400">Less Maint. Savings</span><span id="infoTotalSavings" class="text-blue-400 font-bold">-₱0</span></div>
+                        <div class="flex justify-between items-center"><span class="text-gray-400">Less Your Expenses</span><span id="infoTotalExp" class="text-red-400 font-bold">-₱0</span></div>
+                        <div class="flex justify-between items-center"><span class="text-gray-400">Less Capital Payback</span><span id="infoTotalCapital" class="text-orange-400 font-bold">-₱0</span></div>
+                    </div>
+                </div>
+                <div class="bg-info-green/10 border border-info-green/20 p-5 rounded-2xl mt-8 flex justify-between items-center">
+                    <span class="text-white font-black text-xs tracking-widest uppercase">Pocket Profit</span>
+                    <span id="finalProfitMath" class="text-2xl font-black text-info-green">₱0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ZONE 3: OPERATIONAL GRID -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Machine Status -->
+            <div class="bg-white/5 border border-white/10 p-6 rounded-[2.5rem] shadow-xl">
+                <h4 class="text-white font-mont font-bold uppercase tracking-widest text-xs mb-4">Vending & Printing</h4>
+                <div id="pisonetSummaryContainer" class="space-y-3 mb-4"></div>
+                <div id="coffeeSummaryContainer" class="space-y-3 pt-3 border-t border-white/10 hidden"></div>
+                <div class="pt-3 border-t border-white/10 space-y-2">
+                    <div class="flex justify-between text-xs text-gray-400"><span>PisoWiFi Gross</span><span id="sumPisoWifiTotal" class="text-white font-bold">₱0</span></div>
+                    <div class="flex justify-between text-xs text-gray-400"><span>Printing Gross</span><span id="sumPrintingTotal" class="text-info-green font-bold">₱0</span></div>
+                </div>
+            </div>
+
+            <!-- Savings & Payouts -->
+            <div class="bg-white/5 border border-white/10 p-6 rounded-[2.5rem] shadow-xl">
+                <h4 class="text-info-green font-mont font-bold uppercase tracking-widest text-xs mb-4">Partner & Fund Status</h4>
+                <div id="infoPartnerPayouts" class="space-y-3 mb-4"></div>
+                <div id="shopSavingsContainer" class="space-y-3 pt-3 border-t border-white/10"></div>
+            </div>
+
+            <!-- Expense Breakdown -->
+            <div class="bg-white/5 border border-white/10 p-6 rounded-[2.5rem] shadow-xl flex flex-col">
+                <h4 class="text-red-400 font-mont font-bold uppercase tracking-widest text-xs mb-4">Expense Breakdown</h4>
+                <div id="expenseBreakdownContainer" class="space-y-6 text-xs flex-1"></div>
+            </div>
+        </div>
+
+        <!-- ZONE 4: INVESTMENTS & DEBTS (Wide) -->
+        <div class="bg-white/5 border border-white/10 p-8 rounded-[2.5rem] shadow-xl">
+            <div class="flex items-center gap-3 mb-8">
+                <div class="bg-orange-500/20 p-2.5 rounded-xl text-orange-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                </div>
+                <h4 class="text-orange-400 font-mont font-bold uppercase tracking-wider text-sm">Investments & Debts</h4>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                <!-- Left: Asset Recovery -->
+                <div id="capitalRecoveryContainer" class="space-y-6"></div>
+                
+                <!-- Right: Sticky Notes -->
+                <div class="space-y-4">
+                    <div id="pendingDeductionsContainer" class="space-y-3"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="h-24 mobile-spacer"></div>
+</main>
+
+<!-- TAB: HISTORY -->
+<main id="historyTab" class="tab-content flex-1 w-full bg-info-blue lg:h-[calc(100vh-88px)] overflow-y-auto custom-scrollbar light-scrollbar">
+    <div class="bg-white px-6 py-8 flex flex-col lg:flex-row items-center justify-center gap-6 shadow-sm border-b border-gray-200">
+        <div class="text-center lg:text-left font-mont">
+            <h2 class="text-2xl lg:text-4xl font-black text-[#1e3a8a] uppercase tracking-wide">System Logs</h2>
+            <h2 class="text-2xl lg:text-4xl font-black text-info-green uppercase tracking-wide mt-1">Activity Tracking</h2>
+        </div>
+        <div class="flex flex-col sm:flex-row ml-auto mt-4 lg:mt-0 gap-3 items-center w-full lg:w-auto">
+            <select id="logTimeFilterSelect" onchange="applyLogFilter()" class="w-full sm:w-auto bg-gray-50 border border-gray-200 p-3 rounded-xl text-sm font-bold text-[#1e3a8a]"><option value="all_time">All Time</option><option value="this_month">This Month</option></select>
+            <select id="logFilterSelect" onchange="applyLogFilter()" class="w-full sm:w-auto bg-gray-50 border border-gray-200 p-3 rounded-xl text-sm font-bold text-[#1e3a8a]"><option value="all">All Categories</option></select>
+            <button onclick="exportToCSV()" class="bg-info-green text-[#1e3a8a] px-4 py-3 rounded-xl text-sm font-bold hover:opacity-90 transition-colors flex items-center gap-2 justify-center w-full sm:w-auto shadow-sm">Export</button>
+            <span id="logCount" class="font-bold bg-blue-50 px-4 py-3 rounded-xl text-info-blue border border-blue-100 whitespace-nowrap text-sm w-full sm:w-auto text-center">0 Total Logs</span>
+        </div>
+    </div>
+    <div class="flex-1 flex flex-col p-6 lg:p-12 w-full max-w-[1600px] mx-auto min-h-[50vh]"><div id="activityContainer" class="space-y-3 lg:space-y-4 w-full max-w-4xl mx-auto flex-1 pb-24 lg:pb-0"></div></div>
+    <div class="h-24 mobile-spacer"></div>
+</main>
+
+<!-- Modals (Simplified for example) -->
+<!-- Modal for Delete Authentication -->
+<div id="deleteAuthModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 modal-overlay">
+    <div class="bg-white w-full max-w-sm rounded-[2rem] p-8 shadow-2xl relative">
+        <div class="flex justify-between items-center mb-6"><h3 class="text-xl font-black text-red-500 font-mont uppercase tracking-widest flex items-center gap-2"><span>⚠️</span> Void Record</h3><button onclick="closeDeleteAuthModal()" class="text-gray-400 hover:text-gray-800 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div>
+        <div class="space-y-6">
+            <p id="deleteAuthDesc" class="text-sm text-gray-600 font-medium text-center">Please enter the admin password to permanently void this transaction.</p>
+            <div id="deleteAuthInputContainer"><input id="deleteAuthPassword" type="password" placeholder="Enter password..." class="w-full bg-gray-50 border border-gray-200 p-4 rounded-xl font-black text-center focus:border-red-500 transition-colors"><p id="deleteAuthError" class="text-red-500 text-xs font-bold mt-2 text-center hidden">Incorrect password!</p></div>
+            <button onclick="confirmDeleteLog()" class="w-full bg-red-500 text-white font-mont font-black py-4 rounded-xl shadow-lg hover:bg-red-600 transition-all text-lg uppercase tracking-widest">Confirm Void</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Edit Record -->
+<div id="editLogModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 modal-overlay">
+    <div class="bg-white w-full max-w-sm rounded-[2rem] p-8 shadow-2xl relative">
+        <div class="flex justify-between items-center mb-6"><h3 class="text-xl font-black text-info-blue font-mont uppercase tracking-widest flex items-center gap-2"><span>✏️</span> Edit Record</h3><button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-800 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div>
+        <div class="space-y-6">
+            <div id="editAuthSection" class="space-y-4"><p class="text-sm text-gray-600 font-medium text-center">Please enter admin password to edit.</p><input id="editAuthPassword" type="password" placeholder="Enter password..." class="w-full bg-gray-50 border border-gray-200 p-4 rounded-xl font-black text-center focus:border-info-blue transition-colors"><p id="editAuthError" class="text-red-500 text-xs font-bold mt-2 text-center hidden">Incorrect password!</p><button onclick="authEditLog()" class="w-full bg-info-blue text-white font-mont font-black py-3 rounded-xl shadow-lg hover:bg-blue-800 transition-all uppercase tracking-widest">Authenticate</button></div>
+            <div id="editDataSection" class="hidden space-y-4"><p class="text-[10px] text-gray-500 font-bold uppercase block tracking-wider">Edit Amount (₱)</p><input id="editLogAmount" type="number" step="0.01" class="w-full bg-gray-50 border border-gray-200 p-4 rounded-xl font-black text-info-blue text-3xl text-center focus:border-info-green transition-colors"><button onclick="saveEditLog()" class="w-full bg-info-green text-[#1e3a8a] font-mont font-black py-4 rounded-xl shadow-lg hover:opacity-90 transition-all text-lg uppercase tracking-widest mt-2">Save Changes</button></div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Login -->
+<div id="loginModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 modal-overlay">
+    <div class="bg-white w-full max-w-sm rounded-[2rem] p-8 shadow-2xl relative">
+        <div class="flex justify-between items-center mb-6"><h3 class="text-xl font-black text-info-blue font-mont uppercase tracking-widest flex items-center gap-2"><span>🔐</span> Account Login</h3><button onclick="closeLoginModal()" class="text-gray-400 hover:text-gray-800 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div>
+        <div class="space-y-4">
+            <p class="text-sm text-gray-600 font-medium text-center mb-2">Sign in to your account.</p>
+            <div><input id="loginUsername" type="text" placeholder="Username" class="w-full bg-gray-50 border border-gray-200 p-4 rounded-xl font-black text-center mb-3"><input id="loginPassword" type="password" placeholder="Password" class="w-full bg-gray-50 border border-gray-200 p-4 rounded-xl font-black text-center"><p id="loginError" class="text-red-500 text-xs font-bold mt-2 text-center hidden">Incorrect credentials!</p></div>
+            <button onclick="confirmLogin()" class="w-full bg-info-blue text-white font-mont font-black py-4 rounded-xl shadow-lg mt-2">Sign In</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Account Settings -->
+<div id="settingsModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 modal-overlay overflow-y-auto">
+    <div class="bg-white w-full max-w-md rounded-[2rem] p-8 shadow-2xl relative my-auto max-h-[90vh] overflow-y-auto custom-scrollbar">
+        <div class="flex justify-between items-center mb-6"><h3 class="text-xl font-black text-info-blue font-mont uppercase tracking-widest flex items-center gap-2"><span>⚙️</span> Account Settings</h3><button onclick="closeSettingsModal()" class="text-gray-400 hover:text-gray-800 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div>
+        <div class="space-y-6">
+            <p id="settingsFeedback" class="hidden text-center"></p>
+            <div class="bg-gray-50 p-4 rounded-xl border border-gray-100"><h4 class="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-3">Change Admin Password</h4><div class="flex gap-2"><input id="newAdminPassword" type="password" placeholder="New Password" class="w-full bg-white border border-gray-200 p-3 rounded-lg text-sm font-bold"><button onclick="saveAdminPassword()" class="bg-info-blue text-white px-4 rounded-lg font-bold text-xs">Save</button></div></div>
+            <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                <h4 class="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-3">Manage Partners</h4>
+                <div class="space-y-2"><select id="newPartnerType" class="w-full bg-white border border-gray-200 p-3 rounded-lg text-sm font-bold"><option value="Pisonet">Pisonet</option><option value="PisoWiFi">PisoWiFi</option></select><input id="newPartnerName" type="text" placeholder="Partner Name" class="w-full bg-white border border-gray-200 p-3 rounded-lg text-sm font-bold"><input id="newPartnerShare" type="number" placeholder="Your Share %" class="w-full bg-white border border-gray-200 p-3 rounded-lg text-sm font-bold"><button onclick="addPartner()" class="w-full bg-blue-500 text-white py-3 rounded-lg font-bold text-sm">Add Partner</button></div>
+                <div class="mt-4"><h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Existing Partners</h4><div id="partnerListContainer" class="max-h-40 overflow-y-auto custom-scrollbar pr-2 space-y-2"></div></div>
+            </div>
+            <div class="bg-orange-50 p-4 rounded-xl border border-orange-100">
+                <h4 class="text-[10px] font-bold text-orange-800 uppercase tracking-wider mb-3">Capital Assets</h4>
+                <div class="space-y-2"><select id="newAssetCategory" class="w-full bg-white border border-gray-200 p-3 rounded-lg text-sm font-bold"><option value="Coffee Vendo">Coffee Vendo</option><option value="Pisonet">Pisonet</option><option value="PisoWiFi">PisoWiFi</option><option value="Printing">Printing</option></select><input id="newAssetName" type="text" placeholder="Asset Name" class="w-full bg-white border border-gray-200 p-3 rounded-lg text-sm font-bold"><div class="flex gap-2"><input id="newAssetCost" type="number" placeholder="Total Cost" class="w-full bg-white border border-gray-200 p-3 rounded-lg text-sm font-bold"><input id="newAssetRecovery" type="number" placeholder="Payback %" value="70" class="w-24 bg-white border border-gray-200 p-3 rounded-lg text-sm font-bold"><input id="newAssetSavings" type="number" placeholder="Savings %" value="5" class="w-24 bg-white border border-gray-200 p-3 rounded-lg text-sm font-bold"></div><button onclick="addAsset()" class="w-full bg-orange-500 text-white py-3 rounded-lg font-bold text-sm uppercase">Enroll Asset</button></div>
+                <div class="mt-4"><h4 class="text-[10px] font-bold text-orange-300 uppercase tracking-wider mb-2">Active Assets</h4><div id="assetListContainer" class="max-h-40 overflow-y-auto custom-scrollbar pr-2 space-y-2"></div></div>
+            </div>
+            <div class="bg-gray-50 p-4 rounded-xl border border-gray-100"><h4 class="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-3">New User</h4><div class="space-y-2"><input id="newUsername" type="text" placeholder="Username" class="w-full bg-white border border-gray-200 p-3 rounded-lg text-sm font-bold"><input id="newUserPassword" type="password" placeholder="Password" class="w-full bg-white border border-gray-200 p-3 rounded-lg text-sm font-bold"><button onclick="addAppUser()" class="w-full bg-info-green text-[#1e3a8a] py-3 rounded-lg font-bold text-sm">Add User</button></div></div>
+            <div><h4 class="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-3">Users</h4><div id="userListContainer" class="max-h-32 overflow-y-auto custom-scrollbar pr-2"></div></div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Cash Register -->
+<div id="registerModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 modal-overlay">
+    <div class="bg-white w-full max-w-md rounded-[2rem] p-8 shadow-2xl relative">
+        <div class="flex justify-between items-center mb-6"><h3 class="text-xl font-black text-info-blue font-mont uppercase tracking-widest">🧮 Cash Register</h3><button onclick="closeRegisterModal()" class="text-gray-400 hover:text-gray-800 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div>
+        <div class="space-y-6">
+            <div class="flex justify-between items-center p-4 bg-gray-50 rounded-xl"><span>Total Cost</span><span id="regTotalCost" class="text-2xl font-black text-info-blue">₱0.00</span></div>
+            <div><label class="text-[10px] font-bold uppercase block mb-2">Cash Received</label><input id="regCashReceived" type="number" placeholder="0.00" oninput="calculateChange()" class="w-full bg-gray-50 border border-gray-200 p-4 rounded-xl font-black text-3xl text-center"></div>
+            <div><label class="text-[10px] font-bold uppercase block mb-2">Quick Shortcuts</label><div class="grid grid-cols-5 gap-2"><button onclick="addCash(500)" class="bg-blue-50 py-3 rounded-lg font-bold text-xs">₱500</button><button onclick="addCash(200)" class="bg-blue-50 py-3 rounded-lg font-bold text-xs">₱200</button><button onclick="addCash(100)" class="bg-blue-50 py-3 rounded-lg font-bold text-xs">₱100</button><button onclick="addCash(50)" class="bg-blue-50 py-3 rounded-lg font-bold text-xs">₱50</button><button onclick="addCash(20)" class="bg-blue-50 py-3 rounded-lg font-bold text-xs">₱20</button></div></div>
+            <div class="text-center pt-2"><span class="text-[10px] font-bold uppercase block mb-1">Change Due</span><div id="regChangeDue" class="text-4xl font-black text-gray-400">₱0.00</div></div>
+            <button id="regSaveBtn" onclick="saveFromRegister()" class="w-full bg-info-green text-info-blue font-mont font-black py-5 rounded-xl shadow-lg mt-2 disabled:opacity-50" disabled>Save Income</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Pisonet -->
+<div id="pisonetModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 modal-overlay">
+    <div class="bg-white w-full max-w-md rounded-[2rem] p-8 shadow-2xl relative">
+        <div class="flex justify-between items-center mb-6"><h3 class="text-xl font-black text-info-blue uppercase tracking-widest">Pisonet</h3><button onclick="closePisonetModal()" class="text-gray-400 hover:text-gray-800 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div>
+        <div class="space-y-6">
+            <div><label class="text-[10px] font-bold uppercase block mb-2">Total Collection</label><input id="modalPisonetAmount" type="number" placeholder="0.00" class="w-full bg-gray-50 border border-gray-200 p-5 rounded-xl font-black text-4xl text-center"></div>
+            <div><label class="text-[10px] font-bold uppercase block mb-3">Select Branch</label><div id="pisonetPartnerContainer" class="grid grid-cols-2 gap-3"></div></div>
+            <button id="savePisonetBtn" onclick="savePisonetCollection()" class="w-full bg-info-green text-info-blue font-mont font-black py-5 rounded-xl shadow-lg mt-2 disabled:opacity-50" disabled>Save Data</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for PisoWiFi -->
+<div id="pisoWifiModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 modal-overlay">
+    <div class="bg-white w-full max-w-md rounded-[2rem] p-8 shadow-2xl relative">
+        <div class="flex justify-between items-center mb-6"><h3 class="text-xl font-black text-info-blue uppercase tracking-widest">PisoWiFi</h3><button onclick="closePisoWifiModal()" class="text-gray-400 hover:text-gray-800 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div>
+        <div class="space-y-6">
+            <div><label class="text-[10px] font-bold uppercase block mb-2">Total Collection</label><input id="modalPisoAmount" type="number" placeholder="0.00" class="w-full bg-gray-50 border border-gray-200 p-5 rounded-xl font-black text-4xl text-center"></div>
+            <div><label class="text-[10px] font-bold uppercase block mb-3">Select Branch</label><div id="pisoWifiPartnerContainer" class="grid grid-cols-2 gap-3"></div></div>
+            <button id="savePisoBtn" onclick="savePisoCollection()" class="w-full bg-info-green text-info-blue font-mont font-black py-5 rounded-xl shadow-lg mt-2 disabled:opacity-50" disabled>Save Data</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Coffee Vendo -->
+<div id="coffeeModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 modal-overlay">
+    <div class="bg-white w-full max-w-md rounded-[2rem] p-8 shadow-2xl relative">
+        <div class="flex justify-between items-center mb-6"><h3 class="text-xl font-black text-orange-800 uppercase tracking-widest">Coffee Vendo</h3><button onclick="closeCoffeeModal()" class="text-gray-400 hover:text-gray-800 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div>
+        <div class="space-y-6">
+            <div><label class="text-[10px] font-bold uppercase block mb-2">Collection Amount</label><input id="modalCoffeeAmount" type="number" placeholder="0.00" class="w-full bg-gray-50 border border-gray-200 p-5 rounded-xl font-black text-orange-800 text-4xl text-center"></div>
+            <div class="bg-orange-50 p-4 rounded-2xl border border-orange-100"><p class="text-[10px] text-orange-800 font-black uppercase text-center mb-2">Split Distribution</p><div class="grid grid-cols-3 gap-2 text-center"><div><span class="block text-[8px] uppercase font-bold">Pocket</span><span id="coffeeSplitIncome" class="text-sm font-black">₱0.00</span></div><div><span class="block text-[8px] uppercase font-bold">Capital</span><span id="coffeeSplitCapital" class="text-sm font-black">₱0.00</span></div><div><span class="block text-[8px] uppercase font-bold">Savings</span><span id="coffeeSplitSavings" class="text-sm font-black">₱0.00</span></div></div></div>
+            <button id="saveCoffeeBtn" onclick="saveCoffeeCollection()" class="w-full bg-orange-500 text-white font-mont font-black py-5 rounded-xl shadow-lg mt-2 disabled:opacity-50" disabled>Save Data</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Deduction -->
+<div id="deductionModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 modal-overlay">
+    <div class="bg-white w-full max-w-sm rounded-[2rem] p-8 shadow-2xl relative">
+        <div class="flex justify-between items-center mb-6"><h3 class="text-xl font-black text-orange-500 uppercase tracking-widest">📝 Settle Debt</h3><button onclick="closeDeductionModal()" class="text-gray-400 hover:text-gray-800 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div>
+        <div class="space-y-6">
+            <p id="deductionDesc" class="text-xs text-gray-500 font-bold uppercase text-center"></p>
+            <div class="space-y-1"><label class="text-[10px] uppercase tracking-wider">Amount to deduct</label><input id="deductionAmount" type="number" step="0.01" class="w-full bg-gray-50 border border-gray-200 p-4 rounded-xl font-black text-3xl text-center"></div>
+            <button onclick="saveDeduction()" class="w-full bg-orange-500 text-white font-black py-4 rounded-xl shadow-lg mt-2 uppercase">Apply Deduction</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Intercept Deduction -->
+<div id="interceptDeductionModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 modal-overlay">
+    <div class="bg-white w-full max-w-sm rounded-[2rem] p-8 shadow-2xl relative">
+        <div class="flex justify-between items-center mb-6"><h3 class="text-xl font-black text-orange-500 uppercase tracking-widest">⚠️ Pending Debt</h3><button onclick="skipInterceptSave()" class="text-gray-400 hover:text-gray-800 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div>
+        <div class="space-y-6">
+            <p id="interceptDeductionDesc" class="text-sm font-bold text-center"></p>
+            <div class="space-y-1"><label class="text-[10px] uppercase">Amount to deduct</label><input id="interceptDeductionAmount" type="number" step="0.01" class="w-full bg-gray-50 border border-gray-200 p-4 rounded-xl font-black text-3xl text-center"></div>
+            <div class="flex gap-2 mt-2"><button onclick="skipInterceptSave()" class="flex-1 bg-gray-100 py-3 rounded-xl uppercase text-xs font-bold">Skip</button><button onclick="confirmInterceptSave()" class="flex-1 bg-orange-500 text-white py-3 rounded-xl uppercase text-xs font-bold shadow-lg">Save & Deduct</button></div>
+        </div>
+    </div>
+</div>
+
+<!-- Navigation -->
+<nav class="fixed bottom-0 left-0 right-0 bg-white p-4 border-t border-gray-200 safe-bottom z-30 lg:hidden shadow-lg">
+    <div class="max-w-md mx-auto flex justify-around items-center">
+        <button id="navHome" onclick="switchTab('home')" class="flex flex-col items-center gap-1 text-info-blue"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2-2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg><span class="text-[9px] font-black uppercase">Home</span></button>
+        <button id="navStats" onclick="switchTab('stats')" class="hidden flex flex-col items-center gap-1 text-gray-400"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg><span class="text-[9px] font-black uppercase">Stats</span></button>
+        <button id="navHistory" onclick="switchTab('history')" class="flex flex-col items-center gap-1 text-gray-400"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg><span class="text-[9px] font-black uppercase">Logs</span></button>
+    </div>
+</nav>
+
+<script type="module" src="js/firebase-config.js"></script>
+<script type="module" src="js/app-logic.js"></script>
+<script type="module" src="js/ui-controller.js"></script>
+<script type="module" src="js/dashboard-reports.js"></script>
+<script type="module">
+    document.getElementById('currentDate').innerText = new Date().toLocaleDateString('en-PH', { weekday: 'long', month: 'short', day: 'numeric' });
+    if (window.innerWidth >= 1024) {
+         document.getElementById('expenseForm')?.classList.remove('hidden');
+         document.getElementById('expChevron')?.classList.add('rotate-180');
+    }
+</script>
+</body>
+</html>
