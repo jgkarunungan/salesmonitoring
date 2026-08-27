@@ -92,6 +92,95 @@ window.confirmLogin = () => {
     }
 };
 
+window.saveAdminPassword = async () => {
+    const newPass = document.getElementById('newAdminPassword').value;
+    if (newPass.length < 4) return window.showSettingsFeedback("Password too short!", true);
+    window.appSettings.adminPassword = newPass;
+    await setDoc(settingsDocRef, window.appSettings, { merge: true });
+    window.showSettingsFeedback("Admin password updated successfully!");
+    document.getElementById('newAdminPassword').value = '';
+};
+
+window.addAppUser = async () => {
+    const u = document.getElementById('newUsername').value.trim();
+    const p = document.getElementById('newUserPassword').value;
+    if (!u || !p) return window.showSettingsFeedback("Please fill both fields!", true);
+    if (u.toLowerCase() === 'admin') return window.showSettingsFeedback("Cannot use 'admin' as username!", true);
+    if (!window.appSettings.users) window.appSettings.users = [];
+    if (window.appSettings.users.find(x => x.username.toLowerCase() === u.toLowerCase())) return window.showSettingsFeedback("User already exists!", true);
+
+    window.appSettings.users.push({ username: u, password: p });
+    await setDoc(settingsDocRef, window.appSettings, { merge: true });
+    document.getElementById('newUsername').value = '';
+    document.getElementById('newUserPassword').value = '';
+    window.showSettingsFeedback("User enrolled successfully!");
+    window.renderUserList();
+};
+
+window.removeAppUser = async (index) => {
+    window.appSettings.users.splice(index, 1);
+    await setDoc(settingsDocRef, window.appSettings, { merge: true });
+    window.showSettingsFeedback("User removed successfully!");
+    window.renderUserList();
+};
+
+window.addPartner = async () => {
+    const type = document.getElementById('newPartnerType').value;
+    const name = document.getElementById('newPartnerName').value.trim();
+    const shareInput = parseFloat(document.getElementById('newPartnerShare').value);
+
+    if (!name || isNaN(shareInput) || shareInput <= 0 || shareInput > 100) {
+        return window.showSettingsFeedback("Invalid name or share % (1-100)", true);
+    }
+
+    if (!window.appSettings.partners) window.appSettings.partners = [];
+    if (window.appSettings.partners.find(p => p.type === type && p.name.toLowerCase() === name.toLowerCase())) {
+        return window.showSettingsFeedback(`${name} already exists for ${type}!`, true);
+    }
+
+    window.appSettings.partners.push({ type, name, share: shareInput / 100 });
+    await setDoc(settingsDocRef, window.appSettings, { merge: true });
+    document.getElementById('newPartnerName').value = '';
+    document.getElementById('newPartnerShare').value = '';
+    window.showSettingsFeedback("Partner added successfully!");
+    window.renderPartnerList();
+    window.renderDynamicPartners();
+};
+
+window.removePartner = async (index) => {
+    window.appSettings.partners.splice(index, 1);
+    await setDoc(settingsDocRef, window.appSettings, { merge: true });
+    window.showSettingsFeedback("Partner removed successfully!");
+    window.renderPartnerList();
+    window.renderDynamicPartners();
+};
+
+window.addAsset = async () => {
+    const category = document.getElementById('newAssetCategory').value;
+    const name = document.getElementById('newAssetName').value.trim();
+    const cost = parseFloat(document.getElementById('newAssetCost').value);
+    const recovery = parseFloat(document.getElementById('newAssetRecovery').value) / 100;
+    const savings = parseFloat(document.getElementById('newAssetSavings').value) / 100;
+
+    if (!name || isNaN(cost) || cost <= 0) return window.showSettingsFeedback("Invalid name or cost!", true);
+
+    if (!window.appSettings.assets) window.appSettings.assets = [];
+    window.appSettings.assets.push({ id: Date.now(), category, name, cost, recoveryPercent: recovery, savingsPercent: savings, branch: 'Cabagñan' });
+
+    await setDoc(settingsDocRef, window.appSettings, { merge: true });
+    document.getElementById('newAssetName').value = '';
+    document.getElementById('newAssetCost').value = '';
+    window.showSettingsFeedback("Asset enrolled successfully!");
+    window.renderAssetList();
+};
+
+window.removeAsset = async (index) => {
+    window.appSettings.assets.splice(index, 1);
+    await setDoc(settingsDocRef, window.appSettings, { merge: true });
+    window.showSettingsFeedback("Asset removed successfully!");
+    window.renderAssetList();
+};
+
 window.confirmDeleteLog = async () => {
     const logIdToDelete = window.getLogIdToDelete();
     if (window.currentRole === 'admin') {
