@@ -4,7 +4,6 @@ import { query, orderBy, onSnapshot, doc, setDoc } from "https://www.gstatic.com
 let performanceChartInstance = null;
 let windowExportDocs = [];
 
-// Helper to format "X days ago" for summary
 const getDaysAgo = (ts) => {
     if (!ts) return "";
     const diffDays = Math.floor((new Date() - ts) / 86400000);
@@ -248,19 +247,13 @@ window.renderPerformanceChart = (snapshot, targetYear, branchFilter) => {
             if (data.label.includes('Pisonet')) pData[month] += data.amount;
             else if (data.label.includes('PisoWiFi')) wData[month] += data.amount;
             else if (data.label.includes('Coffee')) cData[month] += data.amount;
-            else if (data.label.includes('Print') || data.label.toLowerCase().includes('photocopy')) prData[month] += data.amount;
+            else if (data.label.includes('Print')) prData[month] += data.amount;
         }
     });
     const ds = (l, d, c) => ({ label: l, data: d, borderColor: c, backgroundColor: c, tension: 0.4, pointRadius: 2, borderWidth: 2 });
     const data = { labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], datasets: [ds('Pisonet', pData, '#3b82f6'), ds('PisoWiFi', wData, '#f97316'), ds('Coffee', cData, '#fbbf24'), ds('Printing', prData, '#00e676')] };
     if (performanceChartInstance) { performanceChartInstance.data = data; performanceChartInstance.update(); }
-    else { performanceChartInstance = new Chart(ctx, { type: 'line', data, options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        interaction: { mode: 'index', intersect: false },
-        plugins: { legend: { labels: { color: 'rgba(255,255,255,0.7)', font: { size: 9 } } }, tooltip: { callbacks: { label: (c) => `${c.dataset.label}: ₱${c.parsed.y.toFixed(2)}` } } },
-        scales: { x: { ticks: { color: 'rgba(255,255,255,0.5)', font: { size: 8 } }, grid: { display: false } }, y: { beginAtZero: true, ticks: { color: 'rgba(255,255,255,0.5)', font: { size: 8 }, callback: (v) => '₱' + v }, grid: { color: 'rgba(255, 255, 255, 0.05)' } } }
-    } }); }
+    else { performanceChartInstance = new Chart(ctx, { type: 'line', data, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, plugins: { legend: { labels: { color: 'rgba(255,255,255,0.7)', font: { size: 9 } } }, tooltip: { callbacks: { label: (c) => `${c.dataset.label}: ₱${c.parsed.y.toFixed(2)}` } } }, scales: { x: { ticks: { color: 'rgba(255,255,255,0.5)', font: { size: 8 } }, grid: { display: false } }, y: { beginAtZero: true, ticks: { color: 'rgba(255,255,255,0.5)', font: { size: 8 }, callback: (v) => '₱' + v }, grid: { color: 'rgba(255, 255, 255, 0.05)' } } } } }); }
 };
 
 window.renderInfographicDonuts = (cats, totalGross) => {
@@ -334,7 +327,12 @@ window.renderLogsList = (snapshot) => {
         let daysPassedHTML = '';
         if (ts) {
             const diffDays = Math.floor((new Date() - ts) / 86400000);
-            daysPassedHTML = `<span class="ml-3 inline-block bg-orange-400 text-white text-[9px] px-2.5 py-1 rounded-full font-black tracking-widest uppercase">${diffDays} DAYS ELAPSED SINCE THIS COLLECTION</span>`;
+            if (index === 0) {
+                daysPassedHTML = `<span class="ml-3 inline-block bg-orange-400 text-white text-[9px] px-2.5 py-1 rounded-full font-black tracking-widest uppercase">${diffDays} DAYS ELAPSED SINCE THIS COLLECTION</span>`;
+            } else {
+                const rel = diffDays === 0 ? "TODAY" : `${diffDays} DAYS AGO`;
+                daysPassedHTML = `<span class="ml-2 text-[9px] text-gray-500 font-bold uppercase opacity-60">${rel}</span>`;
+            }
         }
 
         let gapHTML = '';
@@ -351,26 +349,10 @@ window.renderLogsList = (snapshot) => {
         itemEl.className = `bg-white/5 border border-white/10 p-5 rounded-3xl flex justify-between items-center hover:bg-white/10 transition-colors mb-3`;
 
         const shareNote = (data.sharePercent || 1.0) < 1.0 ? `<p class="text-[9px] text-orange-400 font-bold uppercase mt-1.5 tracking-wider">MY SHARE: ₱${myShareAmt.toFixed(2)} | PARTNER: ₱${(rawAmt - myShareAmt).toFixed(2)}</p>` : '';
+        const timeStr = ts ? ts.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '...';
+        const dateStr = ts ? ts.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '...';
 
-        itemEl.innerHTML = `
-            <div class="flex items-center gap-5 overflow-hidden">
-                <div class="w-14 h-14 flex-shrink-0 rounded-2xl bg-black/20 flex items-center justify-center text-2xl border border-white/10 shadow-inner">${icon}</div>
-                <div class="truncate">
-                    <div class="flex items-center">
-                        <p class="font-bold text-lg text-white truncate font-mont">${data.label}</p>
-                        ${daysPassedHTML}
-                        ${gapHTML}
-                    </div>
-                    <p class="text-xs text-blue-200">${ts ? ts.toLocaleString() : '...'}</p>
-                    ${shareNote}
-                    ${data.partner ? `<p class="text-[9px] text-blue-200/50 uppercase font-bold mt-1">BRANCH: ${data.partner}</p>` : ''}
-                </div>
-            </div>
-            <div class="flex items-center gap-2 flex-shrink-0">
-                <span class="font-black text-2xl ${colorClass}">${data.type === 'income' ? '+' : '-'}₱${rawAmt.toFixed(2)}</span>
-                <button onclick="initEditLog('${id}', ${rawAmt})" class="text-white/30 hover:text-info-blue p-2"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg></button>
-                <button onclick="deleteLog('${id}')" class="text-white/30 hover:text-red-400 p-2"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg></button>
-            </div>`;
+        itemEl.innerHTML = `<div class="flex items-center gap-5 overflow-hidden"><div class="w-14 h-14 flex-shrink-0 rounded-2xl bg-black/20 flex items-center justify-center text-2xl border border-white/10 shadow-inner">${icon}</div><div class="truncate"><div class="flex items-center"><p class="font-bold text-lg text-white truncate font-mont">${data.label}</p>${index === 0 ? daysPassedHTML : ''}${gapHTML}</div><p class="text-xs text-blue-200 font-medium">${timeStr} • ${dateStr} ${index > 0 ? daysPassedHTML : ''}</p>${shareNote}${data.partner ? `<p class="text-[9px] text-blue-200/50 uppercase font-bold mt-1 tracking-widest">BRANCH: ${data.partner}</p>` : ''}</div></div><div class="flex items-center gap-2 flex-shrink-0"><span class="font-black text-2xl ${colorClass}">${data.type === 'income' ? '+' : '-'}₱${rawAmt.toFixed(2)}</span><button onclick="initEditLog('${id}', ${rawAmt})" class="text-white/30 hover:text-info-blue p-2"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg></button><button onclick="deleteLog('${id}')" class="text-white/30 hover:text-red-400 p-2"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg></button></div>`;
         container.appendChild(itemEl);
     });
 };
