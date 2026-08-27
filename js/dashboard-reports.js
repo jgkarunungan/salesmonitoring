@@ -13,7 +13,6 @@ const getDaysAgo = (ts) => {
     return ` • <span class="text-[9px] text-gray-500 uppercase font-bold tracking-tighter">${diffDays}d ago</span>`;
 };
 
-// EXPOSE TO WINDOW IMMEDIATELY
 window.applyLogFilter = () => {
     window.currentLogFilter = document.getElementById('logFilterSelect')?.value || 'all';
     window.currentLogTimeFilter = document.getElementById('logTimeFilterSelect')?.value || 'all_time';
@@ -92,13 +91,11 @@ window.processStats = (snapshot) => {
                 const partnerShareAmt = rawAmt - myShareAmt;
                 totalGross += rawAmt; myGross += myShareAmt; totalPartnerCuts += partnerShareAmt;
 
-                if (data.partner && data.partner !== 'General') {
+                if (data.partner && data.partner !== 'General' && share < 1.0) {
                     if (!partnerStats[data.partner]) partnerStats[data.partner] = { collection: 0, partnerGross: 0, expenseDeduction: 0, netPayout: 0 };
-                    if (share < 1.0) {
-                        partnerStats[data.partner].collection += rawAmt;
-                        partnerStats[data.partner].partnerGross += partnerShareAmt;
-                        partnerStats[data.partner].netPayout += partnerShareAmt;
-                    }
+                    partnerStats[data.partner].collection += rawAmt;
+                    partnerStats[data.partner].partnerGross += partnerShareAmt;
+                    partnerStats[data.partner].netPayout += partnerShareAmt;
                 }
 
                 if (data.label.includes('Pisonet')) {
@@ -220,7 +217,9 @@ window.processStats = (snapshot) => {
     if (partnerContainer) {
         partnerContainer.innerHTML = '<span class="block text-[10px] text-gray-400 uppercase font-bold mb-2 tracking-widest">Partner Net Payouts</span>';
         pendingDebts.forEach(debt => { if (debt.partner && partnerStats[debt.partner]) { partnerStats[debt.partner].netPayout -= debt.pendingBalance; partnerStats[debt.partner].expenseDeduction += debt.pendingBalance; } });
-        const filtered = Object.entries(partnerStats).filter(([name]) => branchFilter === 'all' || name === branchFilter);
+        const filtered = Object.entries(partnerStats).filter(([name]) => {
+            return (appSettings.partners || []).some(p => p.name === name && p.share < 1.0);
+        });
         if (filtered.length === 0) { partnerContainer.innerHTML += '<p class="text-blue-100/50 text-[10px] italic py-2">No active payouts.</p>'; }
         else {
             filtered.forEach(([name, stats]) => {
@@ -249,13 +248,19 @@ window.renderPerformanceChart = (snapshot, targetYear, branchFilter) => {
             if (data.label.includes('Pisonet')) pData[month] += data.amount;
             else if (data.label.includes('PisoWiFi')) wData[month] += data.amount;
             else if (data.label.includes('Coffee')) cData[month] += data.amount;
-            else if (data.label.includes('Print')) prData[month] += data.amount;
+            else if (data.label.includes('Print') || data.label.toLowerCase().includes('photocopy')) prData[month] += data.amount;
         }
     });
     const ds = (l, d, c) => ({ label: l, data: d, borderColor: c, backgroundColor: c, tension: 0.4, pointRadius: 2, borderWidth: 2 });
     const data = { labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], datasets: [ds('Pisonet', pData, '#3b82f6'), ds('PisoWiFi', wData, '#f97316'), ds('Coffee', cData, '#fbbf24'), ds('Printing', prData, '#00e676')] };
     if (performanceChartInstance) { performanceChartInstance.data = data; performanceChartInstance.update(); }
-    else { performanceChartInstance = new Chart(ctx, { type: 'line', data, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, plugins: { legend: { labels: { color: 'rgba(255,255,255,0.7)', font: { size: 9 } } }, tooltip: { callbacks: { label: (c) => `${c.dataset.label}: ₱${c.parsed.y.toFixed(2)}` } } }, scales: { x: { ticks: { color: 'rgba(255,255,255,0.5)', font: { size: 8 } }, grid: { display: false } }, y: { beginAtZero: true, ticks: { color: 'rgba(255,255,255,0.5)', font: { size: 8 }, callback: (v) => '₱' + v }, grid: { color: 'rgba(255, 255, 255, 0.05)' } } } } }); }
+    else { performanceChartInstance = new Chart(ctx, { type: 'line', data, options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: { legend: { labels: { color: 'rgba(255,255,255,0.7)', font: { size: 9 } } }, tooltip: { callbacks: { label: (c) => `${c.dataset.label}: ₱${c.parsed.y.toFixed(2)}` } } },
+        scales: { x: { ticks: { color: 'rgba(255,255,255,0.5)', font: { size: 8 } }, grid: { display: false } }, y: { beginAtZero: true, ticks: { color: 'rgba(255,255,255,0.5)', font: { size: 8 }, callback: (v) => '₱' + v }, grid: { color: 'rgba(255, 255, 255, 0.05)' } } }
+    } }); }
 };
 
 window.renderInfographicDonuts = (cats, totalGross) => {
@@ -324,10 +329,48 @@ window.renderLogsList = (snapshot) => {
     if (document.getElementById('logCount')) document.getElementById('logCount').innerText = `${displayDocs.length} Total Logs`;
     displayDocs.forEach((doc, index) => {
         const data = doc.data(), id = doc.id, ts = data.timestamp?.toDate(), rawAmt = data.amount;
+        const myShareAmt = rawAmt * (data.sharePercent || 1.0);
+
+        let daysPassedHTML = '';
+        if (ts) {
+            const diffDays = Math.floor((new Date() - ts) / 86400000);
+            daysPassedHTML = `<span class="ml-3 inline-block bg-orange-400 text-white text-[9px] px-2.5 py-1 rounded-full font-black tracking-widest uppercase">${diffDays} DAYS ELAPSED SINCE THIS COLLECTION</span>`;
+        }
+
+        let gapHTML = '';
+        if (window.currentLogFilter !== 'all' && index < displayDocs.length - 1) {
+            const nextTs = displayDocs[index + 1].data().timestamp?.toDate();
+            if (ts && nextTs) {
+                const gap = Math.round(Math.abs(ts - nextTs) / 86400000);
+                gapHTML = `<span class="ml-2 inline-block bg-info-green text-[#1e3a8a] text-[9px] px-2.5 py-1 rounded-full font-black tracking-widest uppercase">${gap} DAYS SINCE LAST</span>`;
+            }
+        }
+
         const icon = data.type === 'income' ? '💰' : '💸', colorClass = data.type === 'income' ? 'text-info-green' : 'text-red-400';
         const itemEl = document.createElement('div');
         itemEl.className = `bg-white/5 border border-white/10 p-5 rounded-3xl flex justify-between items-center hover:bg-white/10 transition-colors mb-3`;
-        itemEl.innerHTML = `<div class="flex items-center gap-5 overflow-hidden"><div class="w-14 h-14 flex-shrink-0 rounded-2xl bg-black/20 flex items-center justify-center text-2xl">${icon}</div><div class="truncate"><p class="font-bold text-lg text-white truncate font-mont">${data.label}</p><p class="text-xs text-blue-200">${ts ? ts.toLocaleString() : '...'}</p>${data.partner ? `<p class="text-[9px] text-blue-200/50 uppercase font-bold mt-1">Branch: ${data.partner}</p>` : ''}</div></div><div class="flex items-center gap-2 flex-shrink-0"><span class="font-black text-2xl ${colorClass}">${data.type === 'income' ? '+' : '-'}₱${rawAmt.toFixed(2)}</span><button onclick="initEditLog('${id}', ${rawAmt})" class="text-white/30 hover:text-info-blue p-2"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg></button><button onclick="deleteLog('${id}')" class="text-white/30 hover:text-red-400 p-2"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg></button></div>`;
+
+        const shareNote = (data.sharePercent || 1.0) < 1.0 ? `<p class="text-[9px] text-orange-400 font-bold uppercase mt-1.5 tracking-wider">MY SHARE: ₱${myShareAmt.toFixed(2)} | PARTNER: ₱${(rawAmt - myShareAmt).toFixed(2)}</p>` : '';
+
+        itemEl.innerHTML = `
+            <div class="flex items-center gap-5 overflow-hidden">
+                <div class="w-14 h-14 flex-shrink-0 rounded-2xl bg-black/20 flex items-center justify-center text-2xl border border-white/10 shadow-inner">${icon}</div>
+                <div class="truncate">
+                    <div class="flex items-center">
+                        <p class="font-bold text-lg text-white truncate font-mont">${data.label}</p>
+                        ${daysPassedHTML}
+                        ${gapHTML}
+                    </div>
+                    <p class="text-xs text-blue-200">${ts ? ts.toLocaleString() : '...'}</p>
+                    ${shareNote}
+                    ${data.partner ? `<p class="text-[9px] text-blue-200/50 uppercase font-bold mt-1">BRANCH: ${data.partner}</p>` : ''}
+                </div>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+                <span class="font-black text-2xl ${colorClass}">${data.type === 'income' ? '+' : '-'}₱${rawAmt.toFixed(2)}</span>
+                <button onclick="initEditLog('${id}', ${rawAmt})" class="text-white/30 hover:text-info-blue p-2"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg></button>
+                <button onclick="deleteLog('${id}')" class="text-white/30 hover:text-red-400 p-2"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg></button>
+            </div>`;
         container.appendChild(itemEl);
     });
 };
