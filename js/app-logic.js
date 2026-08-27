@@ -1,22 +1,11 @@
 import { db, logCol, settingsDocRef } from './firebase-config.js';
 import { collection, addDoc, serverTimestamp, deleteDoc, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-// Hardcoded Default Partners
-const defaultPartners = [
-    { type: 'Pisonet', name: 'Cabagñan', share: 1.0 },
-    { type: 'Pisonet', name: 'Iraya', share: 0.5 },
-    { type: 'PisoWiFi', name: 'Iraya', share: 1.0 },
-    { type: 'PisoWiFi', name: 'Cabagñan', share: 1.0 },
-    { type: 'PisoWiFi', name: 'Albin', share: 0.5 },
-    { type: 'PisoWiFi', name: 'Wing', share: 0.3 },
-    { type: 'PisoWiFi', name: 'Ramboanga', share: 0.3 }
-];
-
 // Global State
 window.appSettings = {
     adminPassword: "admin123",
     users: [],
-    partners: defaultPartners,
+    partners: [],
     assets: []
 };
 
@@ -26,19 +15,12 @@ window.latestLogSnapshot = null;
 window.currentLogFilter = 'all';
 window.currentLogTimeFilter = 'all_time';
 
-// Initialize Settings Listener
+// Initialize Settings Listener - Strictly follows the Database
 onSnapshot(settingsDocRef, (docSnap) => {
     if (docSnap.exists()) {
-        const remoteData = docSnap.data();
-
-        // Merge Logic: If remote partners list is smaller than defaults, restore defaults
-        if (!remoteData.partners || remoteData.partners.length < defaultPartners.length) {
-            console.log("Restoring missing partners to database...");
-            setDoc(settingsDocRef, { ...remoteData, partners: defaultPartners }, { merge: true });
-        } else {
-            window.appSettings = { ...window.appSettings, ...remoteData };
-        }
+        window.appSettings = { ...window.appSettings, ...docSnap.data() };
     } else {
+        // Only initialize if the database is completely empty
         setDoc(settingsDocRef, window.appSettings);
     }
 
