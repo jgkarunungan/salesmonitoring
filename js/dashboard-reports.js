@@ -4,12 +4,20 @@ import { query, orderBy, onSnapshot, doc, setDoc } from "https://www.gstatic.com
 let performanceChartInstance = null;
 let windowExportDocs = [];
 
+// Helper to format "X days ago" for summary
 const getDaysAgo = (ts) => {
     if (!ts) return "";
     const diffDays = Math.floor((new Date() - ts) / 86400000);
     if (diffDays === 0) return ' • <span class="text-[9px] text-info-green uppercase font-bold tracking-tighter">Today</span>';
     if (diffDays === 1) return ' • <span class="text-[9px] text-orange-400 uppercase font-bold tracking-tighter">Yesterday</span>';
     return ` • <span class="text-[9px] text-gray-500 uppercase font-bold tracking-tighter">${diffDays}d ago</span>`;
+};
+
+// EXPOSE TO WINDOW IMMEDIATELY
+window.applyLogFilter = () => {
+    window.currentLogFilter = document.getElementById('logFilterSelect')?.value || 'all';
+    window.currentLogTimeFilter = document.getElementById('logTimeFilterSelect')?.value || 'all_time';
+    if (window.latestLogSnapshot) window.renderLogsList(window.latestLogSnapshot);
 };
 
 window.applyInfographicFilter = () => {
@@ -192,9 +200,6 @@ window.processStats = (snapshot) => {
             </div>`).join('');
     }
 
-    set('sumPisoWifiTotal', `₱${pisoWifiGross.toFixed(2)}`);
-    set('sumPrintingTotal', `₱${printingGross.toFixed(2)}`);
-
     const sCont = document.getElementById('shopSavingsContainer');
     if (sCont) {
         sCont.innerHTML = '<span class="block text-[10px] text-gray-400 uppercase font-bold mb-1">Maintenance Funds</span>' + 
@@ -215,9 +220,7 @@ window.processStats = (snapshot) => {
     if (partnerContainer) {
         partnerContainer.innerHTML = '<span class="block text-[10px] text-gray-400 uppercase font-bold mb-2 tracking-widest">Partner Net Payouts</span>';
         pendingDebts.forEach(debt => { if (debt.partner && partnerStats[debt.partner]) { partnerStats[debt.partner].netPayout -= debt.pendingBalance; partnerStats[debt.partner].expenseDeduction += debt.pendingBalance; } });
-        const filtered = Object.entries(partnerStats).filter(([name]) => {
-            return (appSettings.partners || []).some(p => p.name === name && p.share < 1.0);
-        });
+        const filtered = Object.entries(partnerStats).filter(([name]) => branchFilter === 'all' || name === branchFilter);
         if (filtered.length === 0) { partnerContainer.innerHTML += '<p class="text-blue-100/50 text-[10px] italic py-2">No active payouts.</p>'; }
         else {
             filtered.forEach(([name, stats]) => {
@@ -246,20 +249,13 @@ window.renderPerformanceChart = (snapshot, targetYear, branchFilter) => {
             if (data.label.includes('Pisonet')) pData[month] += data.amount;
             else if (data.label.includes('PisoWiFi')) wData[month] += data.amount;
             else if (data.label.includes('Coffee')) cData[month] += data.amount;
-            else if (data.label.includes('Print') || data.label.toLowerCase().includes('photocopy')) prData[month] += data.amount;
+            else if (data.label.includes('Print')) prData[month] += data.amount;
         }
     });
     const ds = (l, d, c) => ({ label: l, data: d, borderColor: c, backgroundColor: c, tension: 0.4, pointRadius: 2, borderWidth: 2 });
     const data = { labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], datasets: [ds('Pisonet', pData, '#3b82f6'), ds('PisoWiFi', wData, '#f97316'), ds('Coffee', cData, '#fbbf24'), ds('Printing', prData, '#00e676')] };
-    
     if (performanceChartInstance) { performanceChartInstance.data = data; performanceChartInstance.update(); }
-    else { performanceChartInstance = new Chart(ctx, { type: 'line', data, options: { 
-        responsive: true, 
-        maintainAspectRatio: false, 
-        interaction: { mode: 'index', intersect: false },
-        plugins: { legend: { labels: { color: 'rgba(255,255,255,0.7)', font: { size: 9 } } }, tooltip: { callbacks: { label: (c) => `${c.dataset.label}: ₱${c.parsed.y.toFixed(2)}` } } }, 
-        scales: { x: { ticks: { color: 'rgba(255,255,255,0.5)', font: { size: 8 } }, grid: { display: false } }, y: { beginAtZero: true, ticks: { color: 'rgba(255,255,255,0.5)', font: { size: 8 }, callback: (v) => '₱' + v }, grid: { color: 'rgba(255, 255, 255, 0.05)' } } } 
-    } }); }
+    else { performanceChartInstance = new Chart(ctx, { type: 'line', data, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, plugins: { legend: { labels: { color: 'rgba(255,255,255,0.7)', font: { size: 9 } } }, tooltip: { callbacks: { label: (c) => `${c.dataset.label}: ₱${c.parsed.y.toFixed(2)}` } } }, scales: { x: { ticks: { color: 'rgba(255,255,255,0.5)', font: { size: 8 } }, grid: { display: false } }, y: { beginAtZero: true, ticks: { color: 'rgba(255,255,255,0.5)', font: { size: 8 }, callback: (v) => '₱' + v }, grid: { color: 'rgba(255, 255, 255, 0.05)' } } } } }); }
 };
 
 window.renderInfographicDonuts = (cats, totalGross) => {
