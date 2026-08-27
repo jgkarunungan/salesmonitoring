@@ -299,7 +299,8 @@ window.savePisoCollection = async () => {
     const amtInp = document.getElementById('modalPisoAmount');
     const amount = parseFloat(amtInp ? amtInp.value : 0);
     if (selectedPartnerName && amount > 0) {
-        await saveToFirebase(`PisoWiFi: ${selectedPartnerName}`, amount, 'income', selectedPartnerName, 1.0);
+        // Use the actual selected share percent (e.g., 0.3 for Wing) instead of 1.0
+        await saveToFirebase(`PisoWiFi: ${selectedPartnerName}`, amount, 'income', selectedPartnerName, selectedSharePercent);
         window.closePisoWifiModal();
     }
 };

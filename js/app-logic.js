@@ -9,7 +9,10 @@ window.appSettings = {
         { type: 'Pisonet', name: 'Cabagñan', share: 1.0 },
         { type: 'Pisonet', name: 'Iraya', share: 0.5 },
         { type: 'PisoWiFi', name: 'Iraya', share: 1.0 },
-        { type: 'PisoWiFi', name: 'Cabagñan', share: 1.0 }
+        { type: 'PisoWiFi', name: 'Cabagñan', share: 1.0 },
+        { type: 'PisoWiFi', name: 'Albin', share: 0.5 },
+        { type: 'PisoWiFi', name: 'Wing', share: 0.3 },
+        { type: 'PisoWiFi', name: 'Ramboanga', share: 0.3 }
     ],
     assets: []
 };
