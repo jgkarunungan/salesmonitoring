@@ -144,7 +144,7 @@ window.renderDynamicPartners = () => {
         } else if (p.type === 'PisoWiFi' && pisoContainer) {
             pisoContainer.innerHTML += `
                 <button onclick="selectPartner('${p.name}', ${p.share})" class="partner-btn bg-gray-50 p-4 rounded-xl text-sm font-bold border-2 border-gray-100 text-gray-600 hover:border-blue-200 transition-colors w-full">
-                    ${p.name}
+                    ${p.name}<br><span class="text-[10px] font-normal text-gray-400 block mt-1">${Math.round(p.share * 100)}% Share</span>
                 </button>`;
         }
     });
