@@ -56,7 +56,7 @@ window.processStats = (snapshot) => {
     let pisoWifiGross = 0, printingGross = 0, coffeeGross = 0;
 
     const cats = { Pisonet: 0, PisoWiFi: 0, Printing: 0, Coffee: 0, Other: 0 };
-    const partnerStats = {}, pisonetTotals = {}, pisonetLastDates = {}, shopSavings = {};
+    const partnerStats = {}, pisonetTotals = {}, pisonetLastDates = {};
     const detailedExpenses = {};
     const pisoWifiPartnerTotals = {}; 
     
@@ -120,14 +120,19 @@ window.processStats = (snapshot) => {
                     if (!latestPrintingTs || ts > latestPrintingTs) latestPrintingTs = ts;
                 } else { cats.Other += rawAmt; }
 
-                const catKey = data.label.includes('Coffee') ? 'Coffee Vendo' : data.label.includes('Pisonet') ? 'Pisonet' : data.label.includes('PisoWiFi') ? 'PisoWiFi' : 'Printing';
+                // Capital & Savings Logic with Unified General Fund
+                const catKey = data.label.includes('Coffee') ? 'Coffee Vendo' : 
+                             data.label.includes('Pisonet') ? 'Pisonet' :
+                             data.label.includes('PisoWiFi') ? 'PisoWiFi' : 'Printing';
+                
                 const asset = (appSettings.assets || []).find(a => a.category === catKey);
-                if (asset) {
-                    totalCapitalRecovered += (rawAmt * asset.recoveryPercent);
-                    totalSavingsAccumulated += (rawAmt * (asset.savingsPercent || 0));
-                    const br = data.partner || 'General';
-                    shopSavings[br] = (shopSavings[br] || 0) + (rawAmt * (asset.savingsPercent || 0));
-                }
+                
+                let recPercent = asset ? asset.recoveryPercent : 0;
+                let savPercent = asset ? (asset.savingsPercent || 0) : 0.05; 
+                
+                totalCapitalRecovered += (rawAmt * recPercent);
+                totalSavingsAccumulated += (myShareAmt * savPercent); // Saving from YOUR share
+
             } else if (data.type === 'expense') {
                 curExp += rawAmt;
                 const branch = data.partner || 'General';
@@ -137,6 +142,7 @@ window.processStats = (snapshot) => {
 
                 let myShareOfBranch = branch === 'Iraya' ? 0.5 : 1.0;
                 myExpenseBurden += (rawAmt * myShareOfBranch);
+                
                 if (myShareOfBranch < 1.0 && branch !== 'General') {
                     const partnerShareExp = rawAmt * (1 - myShareOfBranch);
                     if (!partnerStats[branch]) partnerStats[branch] = { collection: 0, partnerGross: 0, expenseDeduction: 0, netPayout: 0 };
@@ -198,8 +204,12 @@ window.processStats = (snapshot) => {
 
     const sCont = document.getElementById('shopSavingsContainer');
     if (sCont) {
-        sCont.innerHTML = '<span class="block text-[10px] text-gray-400 uppercase font-bold mb-1">Maintenance Funds</span>' + 
-            Object.entries(shopSavings).map(([br, amt]) => `<div class="flex justify-between items-center text-xs"><span>${br} Savings</span><span class="text-info-green font-bold">₱${amt.toFixed(2)}</span></div>`).join('');
+        sCont.innerHTML = `
+            <div class="flex flex-col items-center justify-center p-4 bg-black/20 rounded-2xl border border-blue-500/20">
+                <span class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">General Savings Total</span>
+                <span class="text-3xl font-black text-info-green">₱${totalSavingsAccumulated.toFixed(2)}</span>
+                <p class="text-[9px] text-blue-200/50 mt-2 text-center italic">Unified fund for all parts and repairs.</p>
+            </div>`;
     }
 
     const expCont = document.getElementById('expenseBreakdownContainer');
@@ -247,13 +257,19 @@ window.renderPerformanceChart = (snapshot, targetYear, branchFilter) => {
             if (data.label.includes('Pisonet')) pData[month] += data.amount;
             else if (data.label.includes('PisoWiFi')) wData[month] += data.amount;
             else if (data.label.includes('Coffee')) cData[month] += data.amount;
-            else if (data.label.includes('Print')) prData[month] += data.amount;
+            else if (data.label.includes('Print') || data.label.toLowerCase().includes('photocopy')) prData[month] += data.amount;
         }
     });
     const ds = (l, d, c) => ({ label: l, data: d, borderColor: c, backgroundColor: c, tension: 0.4, pointRadius: 2, borderWidth: 2 });
     const data = { labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], datasets: [ds('Pisonet', pData, '#3b82f6'), ds('PisoWiFi', wData, '#f97316'), ds('Coffee', cData, '#fbbf24'), ds('Printing', prData, '#00e676')] };
     if (performanceChartInstance) { performanceChartInstance.data = data; performanceChartInstance.update(); }
-    else { performanceChartInstance = new Chart(ctx, { type: 'line', data, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, plugins: { legend: { labels: { color: 'rgba(255,255,255,0.7)', font: { size: 9 } } }, tooltip: { callbacks: { label: (c) => `${c.dataset.label}: ₱${c.parsed.y.toFixed(2)}` } } }, scales: { x: { ticks: { color: 'rgba(255,255,255,0.5)', font: { size: 8 } }, grid: { display: false } }, y: { beginAtZero: true, ticks: { color: 'rgba(255,255,255,0.5)', font: { size: 8 }, callback: (v) => '₱' + v }, grid: { color: 'rgba(255, 255, 255, 0.05)' } } } } }); }
+    else { performanceChartInstance = new Chart(ctx, { type: 'line', data, options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: { legend: { labels: { color: 'rgba(255,255,255,0.7)', font: { size: 9 } } }, tooltip: { callbacks: { label: (c) => `${c.dataset.label}: ₱${c.parsed.y.toFixed(2)}` } } },
+        scales: { x: { ticks: { color: 'rgba(255,255,255,0.5)', font: { size: 8 } }, grid: { display: false } }, y: { beginAtZero: true, ticks: { color: 'rgba(255,255,255,0.5)', font: { size: 8 }, callback: (v) => '₱' + v }, grid: { color: 'rgba(255, 255, 255, 0.05)' } } }
+    } }); }
 };
 
 window.renderInfographicDonuts = (cats, totalGross) => {
@@ -273,7 +289,7 @@ window.renderPendingDebts = (debts) => {
     if (!container) return; container.innerHTML = '<span class="block text-[10px] text-gray-400 uppercase font-bold mb-1 tracking-widest">Sticky Notes (Pending)</span>';
     if (debts.length === 0) { container.innerHTML += '<p class="text-orange-200/50 text-[10px] italic py-2 text-center">None.</p>'; return; }
     debts.sort((a,b) => b.ts - a.ts).forEach(debt => { 
-        container.innerHTML += `<div class="flex justify-between items-center text-xs mb-2 bg-white/5 p-2 rounded-xl border border-white/5"><div class="truncate pr-2"><span class="text-orange-200 font-bold block">${debt.partner}</span><span class="text-white/60 text-[10px] truncate">${debt.label}</span></div><div class="text-right flex flex-col items-end gap-1"><span class="text-orange-400 font-bold shrink-0">₱${debt.pendingBalance.toFixed(2)}</span><button onclick="openDeductionModal('${debt.id}', ${debt.pendingBalance}, '${debt.label}', '${debt.partner}')" class="bg-orange-500/20 text-orange-300 px-2 py-0.5 rounded text-[9px] font-black uppercase hover:bg-orange-500/40 transition-colors">Settle</button></div></div>`;
+        container.innerHTML += `<div class="flex justify-between items-center text-xs mb-2 bg-white/5 p-2 rounded-xl border border-white/5"><div class="truncate pr-2"><span class="text-orange-200 font-bold block">${debt.partner}</span><span class="text-white/60 text-[10px] truncate">${debt.label}</span></div><div class="text-right flex flex-col items-end gap-1"><span class="text-orange-400 font-bold shrink-0">₱${debt.pendingBalance.toFixed(2)}</span><button onclick="openDeductionModal('${debt.id}', ${debt.pendingBalance}, '${debt.label}', '${debt.partner}')" class="bg-orange-500/20 text-orange-300 px-2 py-0.5 rounded text-[9px] font-black uppercase hover:bg-orange-500/40 transition-colors">Settle</button></div></div>`; 
     });
 };
 
@@ -347,12 +363,7 @@ window.renderLogsList = (snapshot) => {
         const icon = data.type === 'income' ? '💰' : '💸', colorClass = data.type === 'income' ? 'text-info-green' : 'text-red-400';
         const itemEl = document.createElement('div');
         itemEl.className = `bg-white/5 border border-white/10 p-5 rounded-3xl flex justify-between items-center hover:bg-white/10 transition-colors mb-3`;
-
-        const shareNote = (data.sharePercent || 1.0) < 1.0 ? `<p class="text-[9px] text-orange-400 font-bold uppercase mt-1.5 tracking-wider">MY SHARE: ₱${myShareAmt.toFixed(2)} | PARTNER: ₱${(rawAmt - myShareAmt).toFixed(2)}</p>` : '';
-        const timeStr = ts ? ts.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '...';
-        const dateStr = ts ? ts.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '...';
-
-        itemEl.innerHTML = `<div class="flex items-center gap-5 overflow-hidden"><div class="w-14 h-14 flex-shrink-0 rounded-2xl bg-black/20 flex items-center justify-center text-2xl border border-white/10 shadow-inner">${icon}</div><div class="truncate"><div class="flex items-center"><p class="font-bold text-lg text-white truncate font-mont">${data.label}</p>${index === 0 ? daysPassedHTML : ''}${gapHTML}</div><p class="text-xs text-blue-200 font-medium">${timeStr} • ${dateStr} ${index > 0 ? daysPassedHTML : ''}</p>${shareNote}${data.partner ? `<p class="text-[9px] text-blue-200/50 uppercase font-bold mt-1 tracking-widest">BRANCH: ${data.partner}</p>` : ''}</div></div><div class="flex items-center gap-2 flex-shrink-0"><span class="font-black text-2xl ${colorClass}">${data.type === 'income' ? '+' : '-'}₱${rawAmt.toFixed(2)}</span><button onclick="initEditLog('${id}', ${rawAmt})" class="text-white/30 hover:text-info-blue p-2"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg></button><button onclick="deleteLog('${id}')" class="text-white/30 hover:text-red-400 p-2"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg></button></div>`;
+        itemEl.innerHTML = `<div class="flex items-center gap-5 overflow-hidden"><div class="w-14 h-14 flex-shrink-0 rounded-2xl bg-black/20 flex items-center justify-center text-2xl border border-white/10 shadow-inner">${icon}</div><div class="truncate"><p class="font-bold text-lg text-white truncate font-mont">${data.label}</p>${index === 0 ? daysPassedHTML : ''}${gapHTML}</div><p class="text-xs text-blue-200">${ts ? ts.toLocaleString() : '...'}</p>${data.partner ? `<p class="text-[9px] text-blue-200/50 uppercase font-bold mt-1">Branch: ${data.partner}</p>` : ''}</div></div><div class="flex items-center gap-2 flex-shrink-0"><span class="font-black text-2xl ${colorClass}">${data.type === 'income' ? '+' : '-'}₱${rawAmt.toFixed(2)}</span><button onclick="initEditLog('${id}', ${rawAmt})" class="text-white/30 hover:text-info-blue p-2"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg></button><button onclick="deleteLog('${id}')" class="text-white/30 hover:text-red-400 p-2"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg></button></div>`;
         container.appendChild(itemEl);
     });
 };
