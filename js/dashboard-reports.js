@@ -53,7 +53,7 @@ window.processStats = (snapshot) => {
     }
 
     let totalGross = 0, myGross = 0, totalPartnerCuts = 0, curExp = 0, myExpenseBurden = 0, totalCapitalRecovered = 0, totalSavingsAccumulated = 0;
-    let pisoWifiGross = 0, printingGross = 0, coffeeGross = 0;
+    let pisoWifiGross = 0, printingGross = 0, coffeeGross = 0, coffeeExp = 0, coffeeCap = 0, coffeeSav = 0;
 
     const cats = { Pisonet: 0, PisoWiFi: 0, Printing: 0, Coffee: 0, Other: 0 };
     const partnerStats = {}, pisonetTotals = {}, pisonetLastDates = {};
@@ -90,12 +90,20 @@ window.processStats = (snapshot) => {
                 const partnerShareAmt = rawAmt - myShareAmt;
                 totalGross += rawAmt; myGross += myShareAmt; totalPartnerCuts += partnerShareAmt;
 
-                if (data.partner && data.partner !== 'General' && share < 1.0) {
-                    if (!partnerStats[data.partner]) partnerStats[data.partner] = { collection: 0, partnerGross: 0, expenseDeduction: 0, netPayout: 0 };
-                    partnerStats[data.partner].collection += rawAmt;
-                    partnerStats[data.partner].partnerGross += partnerShareAmt;
-                    partnerStats[data.partner].netPayout += partnerShareAmt;
-                }
+                // Capital & Savings Logic
+                const catKey = data.label.includes('Coffee') ? 'Coffee Vendo' : 
+                             data.label.includes('Pisonet') ? 'Pisonet' :
+                             data.label.includes('PisoWiFi') ? 'PisoWiFi' : 'Printing';
+                
+                const asset = (appSettings.assets || []).find(a => a.category === catKey);
+                let recPercent = asset ? asset.recoveryPercent : 0;
+                let savPercent = asset ? (asset.savingsPercent || 0) : 0.05; 
+                
+                const capAmt = (rawAmt * recPercent);
+                const savAmt = (myShareAmt * savPercent);
+
+                totalCapitalRecovered += capAmt;
+                totalSavingsAccumulated += savAmt;
 
                 if (data.label.includes('Pisonet')) {
                     const br = data.partner || 'General';
@@ -109,30 +117,25 @@ window.processStats = (snapshot) => {
                     pisoWifiPartnerTotals[wifiPartner].myShare += myShareAmt;
                     pisoWifiPartnerTotals[wifiPartner].partnerShare += partnerShareAmt;
                     if (ts > pisoWifiPartnerTotals[wifiPartner].ts) pisoWifiPartnerTotals[wifiPartner].ts = ts;
-
                     pisoWifiGross += rawAmt; cats.PisoWiFi += rawAmt;
                     if (!latestPisoWifiTs || ts > latestPisoWifiTs) latestPisoWifiTs = ts;
                 } else if (data.label.includes('Coffee')) {
-                    coffeeGross += rawAmt; cats.Coffee += rawAmt;
+                    coffeeGross += rawAmt; 
+                    coffeeCap += capAmt;
+                    coffeeSav += savAmt;
+                    cats.Coffee += rawAmt;
                     if (!latestCoffeeTs || ts > latestCoffeeTs) latestCoffeeTs = ts;
                 } else if (data.label.includes('Print') || data.label.toLowerCase().includes('photocopy')) {
                     printingGross += rawAmt; cats.Printing += rawAmt;
                     if (!latestPrintingTs || ts > latestPrintingTs) latestPrintingTs = ts;
                 } else { cats.Other += rawAmt; }
 
-                // Capital & Savings Logic with Unified General Fund
-                const catKey = data.label.includes('Coffee') ? 'Coffee Vendo' : 
-                             data.label.includes('Pisonet') ? 'Pisonet' :
-                             data.label.includes('PisoWiFi') ? 'PisoWiFi' : 'Printing';
-                
-                const asset = (appSettings.assets || []).find(a => a.category === catKey);
-                
-                let recPercent = asset ? asset.recoveryPercent : 0;
-                let savPercent = asset ? (asset.savingsPercent || 0) : 0.05; 
-                
-                totalCapitalRecovered += (rawAmt * recPercent);
-                totalSavingsAccumulated += (myShareAmt * savPercent); // Saving from YOUR share
-
+                if (data.partner && data.partner !== 'General' && share < 1.0) {
+                    if (!partnerStats[data.partner]) partnerStats[data.partner] = { collection: 0, partnerGross: 0, expenseDeduction: 0, netPayout: 0 };
+                    partnerStats[data.partner].collection += rawAmt;
+                    partnerStats[data.partner].partnerGross += partnerShareAmt;
+                    partnerStats[data.partner].netPayout += partnerShareAmt;
+                }
             } else if (data.type === 'expense') {
                 curExp += rawAmt;
                 const branch = data.partner || 'General';
@@ -140,9 +143,12 @@ window.processStats = (snapshot) => {
                 if (!detailedExpenses[branch]) detailedExpenses[branch] = {};
                 detailedExpenses[branch][category] = (detailedExpenses[branch][category] || 0) + rawAmt;
 
+                if (branch === 'Coffee Vendo' || branch.includes('Coffee') || category.toLowerCase().includes('coffee') || category.toLowerCase().includes('vendo cups')) {
+                    coffeeExp += rawAmt;
+                }
+
                 let myShareOfBranch = branch === 'Iraya' ? 0.5 : 1.0;
                 myExpenseBurden += (rawAmt * myShareOfBranch);
-                
                 if (myShareOfBranch < 1.0 && branch !== 'General') {
                     const partnerShareExp = rawAmt * (1 - myShareOfBranch);
                     if (!partnerStats[branch]) partnerStats[branch] = { collection: 0, partnerGross: 0, expenseDeduction: 0, netPayout: 0 };
@@ -172,7 +178,50 @@ window.processStats = (snapshot) => {
     
     const cSummary = document.getElementById('coffeeSummaryContainer');
     if (cSummary) {
-        if (coffeeGross > 0) { cSummary.classList.remove('hidden'); cSummary.innerHTML = `<div class="flex justify-between items-center text-xs"><span>COFFEE VENDO${getDaysAgo(latestCoffeeTs)}</span><span class="font-bold text-orange-200">₱${coffeeGross.toFixed(2)}</span></div>`; }
+        if (coffeeGross > 0 || coffeeExp > 0) { 
+            cSummary.classList.remove('hidden'); 
+            const coffeeNetPocket = coffeeGross - coffeeCap - coffeeSav - coffeeExp;
+            const coffeeAsset = (appSettings.assets || []).find(a => a.category === 'Coffee Vendo');
+            const roiStatus = coffeeAsset ? Math.round((coffeeCap / coffeeAsset.cost) * 100) : 0;
+
+            cSummary.innerHTML = `
+                <div class="bg-orange-500/10 p-4 rounded-2xl border border-orange-500/20 space-y-4">
+                    <div class="flex justify-between items-center">
+                        <span class="text-[10px] font-black text-orange-200 uppercase tracking-widest">Coffee Vendo Health</span>
+                        <span class="text-[8px] text-gray-500 font-bold uppercase">${getDaysAgo(latestCoffeeTs)}</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-x-4 gap-y-3">
+                        <div>
+                            <span class="text-[8px] text-gray-400 uppercase font-bold block">Gross Sales</span>
+                            <span class="text-sm font-black text-white">₱${coffeeGross.toFixed(2)}</span>
+                        </div>
+                        <div>
+                            <span class="text-[8px] text-gray-400 uppercase font-bold block">Supplies Cost</span>
+                            <span class="text-sm font-black text-red-400">₱${coffeeExp.toFixed(2)}</span>
+                        </div>
+                        <div>
+                            <span class="text-[8px] text-orange-300 uppercase font-bold block">Capital Recovery</span>
+                            <span class="text-sm font-black text-orange-400">₱${coffeeCap.toFixed(2)}</span>
+                        </div>
+                        <div>
+                            <span class="text-[8px] text-blue-300 uppercase font-bold block">Maint. Savings</span>
+                            <span class="text-sm font-black text-blue-400">₱${coffeeSav.toFixed(2)}</span>
+                        </div>
+                    </div>
+                    <div class="pt-2 border-t border-white/5 flex justify-between items-center">
+                        <div>
+                            <span class="text-[8px] text-info-green uppercase font-black block">Actual Pocket Profit</span>
+                            <span class="text-lg font-black text-info-green">₱${coffeeNetPocket.toFixed(2)}</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[8px] text-orange-200 uppercase font-black block">Asset Payback ROI</span>
+                            <span class="text-lg font-black text-orange-400">${roiStatus}%</span>
+                        </div>
+                    </div>
+                    <p class="text-[7px] text-blue-200/50 italic text-center uppercase tracking-tighter">Pocket profit = Sales - Supplies - Capital - Savings</p>
+                </div>
+            `; 
+        }
         else { cSummary.classList.add('hidden'); }
     }
 
@@ -295,21 +344,52 @@ window.renderPendingDebts = (debts) => {
 
 window.renderCapitalRecovery = (snapshot, branchFilter) => {
     const container = document.getElementById('capitalRecoveryContainer');
-    if (!container) return; container.innerHTML = '<span class="block text-[10px] text-orange-200 uppercase font-bold mb-2 tracking-widest">Asset Recovery Status</span>';
-    const recoveryTotals = {};
+    if (!container) return; 
+    container.innerHTML = '<span class="block text-[10px] text-orange-200 uppercase font-bold mb-2 tracking-widest">Asset Recovery Status</span>';
+    
+    const recoveryPools = {};
+    const assets = window.appSettings.assets || [];
+
+    // 1. Calculate the total recovery pool for each category
     snapshot.forEach(doc => {
         const data = doc.data();
         if (data.type === 'income') {
             if (branchFilter !== 'all' && data.partner !== branchFilter) return;
-            const cat = data.label.includes('Coffee') ? 'Coffee Vendo' : data.label.includes('Pisonet') ? 'Pisonet' : data.label.includes('PisoWiFi') ? 'PisoWiFi' : 'Printing';
-            const asset = (window.appSettings.assets || []).find(a => a.category === cat);
-            if (asset) recoveryTotals[cat] = (recoveryTotals[cat] || 0) + (data.amount * asset.recoveryPercent);
+            const cat = data.label.includes('Coffee') ? 'Coffee Vendo' : 
+                         data.label.includes('Pisonet') ? 'Pisonet' : 
+                         data.label.includes('PisoWiFi') ? 'PisoWiFi' : 'Printing';
+            
+            const assetTemplate = assets.find(a => a.category === cat);
+            if (assetTemplate) {
+                recoveryPools[cat] = (recoveryPools[cat] || 0) + (data.amount * assetTemplate.recoveryPercent);
+            }
         }
     });
-    (window.appSettings.assets || []).forEach(asset => {
+
+    // 2. Distribute pool sequentially (Waterfall method)
+    const remainingPools = { ...recoveryPools };
+
+    assets.forEach(asset => {
         if (branchFilter !== 'all' && asset.branch !== branchFilter) return;
-        const recovered = recoveryTotals[asset.category] || 0, percent = Math.min(100, Math.round((recovered / asset.cost) * 100));
-        container.innerHTML += `<div class="mb-4"><div class="flex justify-between mb-1"><span class="text-[10px] font-black text-orange-200 uppercase tracking-widest">${asset.name}</span><span class="text-xs font-bold text-white">₱${recovered.toLocaleString()} / ₱${asset.cost.toLocaleString()}</span></div><div class="w-full h-2 bg-black/40 rounded-full overflow-hidden shadow-inner"><div class="h-full bg-orange-500 transition-all duration-1000" style="width: ${percent}%"></div></div></div>`;
+        
+        const pool = remainingPools[asset.category] || 0;
+        const appliedToThisAsset = Math.min(pool, asset.cost);
+        
+        // Subtract from pool for next item in the same category
+        remainingPools[asset.category] = Math.max(0, pool - appliedToThisAsset);
+
+        const percent = Math.min(100, Math.round((appliedToThisAsset / asset.cost) * 100));
+        
+        container.innerHTML += `
+            <div class="mb-4">
+                <div class="flex justify-between mb-1">
+                    <span class="text-[10px] font-black text-orange-200 uppercase tracking-widest">${asset.name}</span>
+                    <span class="text-xs font-bold text-white">₱${appliedToThisAsset.toLocaleString()} / ₱${asset.cost.toLocaleString()}</span>
+                </div>
+                <div class="w-full h-2 bg-black/40 rounded-full overflow-hidden shadow-inner">
+                    <div class="h-full bg-orange-500 transition-all duration-1000" style="width: ${percent}%"></div>
+                </div>
+            </div>`;
     });
 };
 

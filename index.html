@@ -111,7 +111,7 @@
             </div>
             <div id="expenseForm" class="bg-white/5 border border-white/10 p-6 lg:p-8 rounded-[2rem] space-y-5 shadow-lg flex-1">
                 <div class="space-y-1 relative">
-                    <label class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Branch / Location</label>
+                    <label class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Branch / Machine</label>
                     <select id="expLocation" class="w-full bg-black/20 border border-white/10 p-4 rounded-xl text-sm font-bold text-white focus:border-red-400 transition-colors appearance-none cursor-pointer">
                         <option value="General" class="bg-[#1e3a8a] text-white">General / All Shops</option>
                     </select>
@@ -122,6 +122,8 @@
                         <option value="" disabled selected class="text-gray-500">Select Category...</option>
                         <option value="Electricity (ALECO)" class="bg-[#1e3a8a] text-white">Electricity (ALECO)</option>
                         <option value="Internet (DCTV)" class="bg-[#1e3a8a] text-white">Internet (DCTV)</option>
+                        <option value="Coffee Powder" class="bg-[#1e3a8a] text-white">Coffee Powder / Supplies</option>
+                        <option value="Coffee Cups" class="bg-[#1e3a8a] text-white">Vendo Cups</option>
                         <option value="Water Bill" class="bg-[#1e3a8a] text-white">Water Bill</option>
                         <option value="Shop Supplies" class="bg-[#1e3a8a] text-white">Shop Supplies (Ink, Paper)</option>
                         <option value="Maintenance" class="bg-[#1e3a8a] text-white">Maintenance / Repairs</option>
@@ -226,7 +228,11 @@
             <div class="bg-white/5 border border-white/10 p-6 rounded-[2.5rem] shadow-xl">
                 <h4 class="text-white font-mont font-bold uppercase tracking-widest text-xs mb-4">Vending & Printing</h4>
                 <div id="pisonetSummaryContainer" class="space-y-3 mb-4"></div>
-                <div id="coffeeSummaryContainer" class="space-y-3 pt-3 border-t border-white/10 hidden"></div>
+                
+                <!-- Coffee Health Card -->
+                <div id="coffeeSummaryContainer" class="pt-3 border-t border-white/10 hidden">
+                    <!-- Populated by JS -->
+                </div>
                 
                 <!-- PisoWiFi Detailed Breakdown -->
                 <div id="pisoWifiDetailedContainer" class="space-y-2 pt-3 border-t border-white/10 empty:hidden">

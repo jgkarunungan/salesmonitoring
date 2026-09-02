@@ -126,11 +126,24 @@ window.renderDynamicPartners = () => {
     if (expLocation) {
         const currentVal = expLocation.value;
         expLocation.innerHTML = '<option value="General" class="bg-[#1e3a8a] text-white">General / All Shops</option>';
+        
+        // Add Branches (from Partners)
         const uniqueBranches = [...new Set(partners.map(p => p.name))];
         uniqueBranches.forEach(name => {
-            expLocation.innerHTML += `<option value="${name}" class="bg-[#1e3a8a] text-white">${name}</option>`;
+            expLocation.innerHTML += `<option value="${name}" class="bg-[#1e3a8a] text-white">${name} Branch</option>`;
         });
-        if (currentVal && uniqueBranches.includes(currentVal)) {
+
+        // Add Specific Assets (for targeted ROI tracking)
+        const assets = window.appSettings.assets || [];
+        if (assets.length > 0) {
+            expLocation.innerHTML += `<optgroup label="Specific Machines" class="bg-[#1e3a8a] text-gray-400 text-[10px] uppercase font-bold">`;
+            assets.forEach(a => {
+                expLocation.innerHTML += `<option value="${a.name}" class="bg-[#1e3a8a] text-white">${a.name}</option>`;
+            });
+            expLocation.innerHTML += `</optgroup>`;
+        }
+
+        if (currentVal) {
             expLocation.value = currentVal;
         }
     }
