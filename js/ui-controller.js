@@ -107,10 +107,33 @@ window.renderAssetList = () => {
                     <span class="text-sm font-bold text-orange-800 block">${a.name}</span>
                     <span class="text-[10px] text-gray-400 font-bold uppercase">${a.category} • ₱${a.cost.toLocaleString()} • ${Math.round(a.recoveryPercent * 100)}% Payback</span>
                 </div>
-                <button onclick="removeAsset(${i})" class="text-red-500 hover:text-red-700 font-bold text-xs bg-red-50 px-2 py-1 rounded transition-colors">Remove</button>
+                <div class="flex gap-1">
+                    <button onclick="editAsset(${i})" class="text-info-blue hover:text-blue-700 font-bold text-xs bg-blue-50 px-2 py-1 rounded transition-colors">Edit</button>
+                    <button onclick="removeAsset(${i})" class="text-red-500 hover:text-red-700 font-bold text-xs bg-red-50 px-2 py-1 rounded transition-colors">Remove</button>
+                </div>
             </div>
         `;
     });
+};
+
+window.editAsset = (index) => {
+    const asset = window.appSettings.assets[index];
+    if (!asset) return;
+
+    window.currentAssetEditId = asset.id;
+    document.getElementById('editAssetNameDisplay').innerText = asset.name;
+    document.getElementById('editAssetCost').value = asset.cost;
+    document.getElementById('editAssetRecovery').value = Math.round(asset.recoveryPercent * 100);
+    document.getElementById('editAssetSavings').value = Math.round(asset.savingsPercent * 100);
+
+    document.getElementById('assetEditSection').classList.remove('hidden');
+    document.getElementById('assetInputSection').classList.add('hidden');
+};
+
+window.cancelAssetEdit = () => {
+    window.currentAssetEditId = null;
+    document.getElementById('assetEditSection').classList.add('hidden');
+    document.getElementById('assetInputSection').classList.remove('hidden');
 };
 
 window.renderDynamicPartners = () => {

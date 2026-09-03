@@ -174,6 +174,27 @@ window.addAsset = async () => {
     window.renderAssetList();
 };
 
+window.saveAssetEdit = async () => {
+    const assetId = window.currentAssetEditId;
+    const cost = parseFloat(document.getElementById('editAssetCost').value);
+    const recovery = parseFloat(document.getElementById('editAssetRecovery').value) / 100;
+    const savings = parseFloat(document.getElementById('editAssetSavings').value) / 100;
+
+    if (isNaN(cost) || cost <= 0) return window.showSettingsFeedback("Invalid cost!", true);
+
+    const assetIndex = window.appSettings.assets.findIndex(a => a.id === assetId);
+    if (assetIndex > -1) {
+        window.appSettings.assets[assetIndex].cost = cost;
+        window.appSettings.assets[assetIndex].recoveryPercent = recovery;
+        window.appSettings.assets[assetIndex].savingsPercent = savings;
+
+        await setDoc(settingsDocRef, window.appSettings, { merge: true });
+        window.showSettingsFeedback("Asset updated successfully!");
+        window.cancelAssetEdit();
+        window.renderAssetList();
+    }
+};
+
 window.removeAsset = async (index) => {
     window.appSettings.assets.splice(index, 1);
     await setDoc(settingsDocRef, window.appSettings, { merge: true });

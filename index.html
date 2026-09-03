@@ -350,8 +350,33 @@
                 <div class="mt-4"><h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Existing Partners</h4><div id="partnerListContainer" class="max-h-40 overflow-y-auto custom-scrollbar pr-2 space-y-2"></div></div>
             </div>
             <div class="bg-orange-50 p-4 rounded-xl border border-orange-100">
-                <h4 class="text-[10px] font-bold text-orange-800 uppercase tracking-wider mb-3">Capital Assets</h4>
-                <div class="space-y-2"><select id="newAssetCategory" class="w-full bg-white border border-gray-200 p-3 rounded-lg text-sm font-bold"><option value="Coffee Vendo">Coffee Vendo</option><option value="Pisonet">Pisonet</option><option value="PisoWiFi">PisoWiFi</option><option value="Printing">Printing</option></select><input id="newAssetName" type="text" placeholder="Asset Name" class="w-full bg-white border border-gray-200 p-3 rounded-lg text-sm font-bold"><div class="flex gap-2"><input id="newAssetCost" type="number" placeholder="Total Cost" class="w-full bg-white border border-gray-200 p-3 rounded-lg text-sm font-bold"><input id="newAssetRecovery" type="number" placeholder="Payback %" value="70" class="w-24 bg-white border border-gray-200 p-3 rounded-lg text-sm font-bold"><input id="newAssetSavings" type="number" placeholder="Savings %" value="5" class="w-24 bg-white border border-gray-200 p-3 rounded-lg text-sm font-bold"></div><button onclick="addAsset()" class="w-full bg-orange-500 text-white py-3 rounded-lg font-bold text-sm uppercase">Enroll Asset</button></div>
+                <h4 class="text-[10px] font-bold text-orange-800 uppercase tracking-wider mb-3">Asset Management</h4>
+                <div id="assetEditSection" class="hidden bg-white p-4 rounded-xl border border-orange-200 mb-4 space-y-3">
+                    <h5 class="text-[9px] font-black text-orange-500 uppercase">Edit <span id="editAssetNameDisplay"></span></h5>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="space-y-1">
+                            <label class="text-[8px] font-bold uppercase text-gray-400">Total Cost</label>
+                            <input id="editAssetCost" type="number" class="w-full bg-gray-50 border border-gray-200 p-2 rounded text-sm font-bold">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[8px] font-bold uppercase text-gray-400">Payback %</label>
+                            <input id="editAssetRecovery" type="number" class="w-full bg-gray-50 border border-gray-200 p-2 rounded text-sm font-bold">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="space-y-1">
+                            <label class="text-[8px] font-bold uppercase text-gray-400">Savings %</label>
+                            <input id="editAssetSavings" type="number" class="w-full bg-gray-50 border border-gray-200 p-2 rounded text-sm font-bold">
+                        </div>
+                        <div class="flex items-end">
+                            <button onclick="saveAssetEdit()" class="w-full bg-orange-500 text-white py-2 rounded font-bold text-xs uppercase shadow-sm">Save Changes</button>
+                        </div>
+                    </div>
+                    <button onclick="cancelAssetEdit()" class="w-full text-[8px] text-gray-400 font-bold uppercase hover:text-red-400">Cancel Edit</button>
+                </div>
+                <div id="assetInputSection" class="space-y-2">
+                    <select id="newAssetCategory" class="w-full bg-white border border-gray-200 p-3 rounded-lg text-sm font-bold"><option value="Coffee Vendo">Coffee Vendo</option><option value="Pisonet">Pisonet</option><option value="PisoWiFi">PisoWiFi</option><option value="Printing">Printing</option></select><input id="newAssetName" type="text" placeholder="Asset Name" class="w-full bg-white border border-gray-200 p-3 rounded-lg text-sm font-bold"><div class="flex gap-2"><input id="newAssetCost" type="number" placeholder="Total Cost" class="w-full bg-white border border-gray-200 p-3 rounded-lg text-sm font-bold"><input id="newAssetRecovery" type="number" placeholder="Payback %" value="70" class="w-24 bg-white border border-gray-200 p-3 rounded-lg text-sm font-bold"><input id="newAssetSavings" type="number" placeholder="Savings %" value="5" class="w-24 bg-white border border-gray-200 p-3 rounded-lg text-sm font-bold"></div><button onclick="addAsset()" class="w-full bg-orange-500 text-white py-3 rounded-lg font-bold text-sm uppercase">Enroll Asset</button>
+                </div>
                 <div class="mt-4"><h4 class="text-[10px] font-bold text-orange-300 uppercase tracking-wider mb-2">Active Assets</h4><div id="assetListContainer" class="max-h-40 overflow-y-auto custom-scrollbar pr-2 space-y-2"></div></div>
             </div>
             <div class="bg-gray-50 p-4 rounded-xl border border-gray-100"><h4 class="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-3">New User</h4><div class="space-y-2"><input id="newUsername" type="text" placeholder="Username" class="w-full bg-white border border-gray-200 p-3 rounded-lg text-sm font-bold"><input id="newUserPassword" type="password" placeholder="Password" class="w-full bg-white border border-gray-200 p-3 rounded-lg text-sm font-bold"><button onclick="addAppUser()" class="w-full bg-info-green text-[#1e3a8a] py-3 rounded-lg font-bold text-sm">Add User</button></div></div>
