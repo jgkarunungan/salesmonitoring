@@ -143,7 +143,11 @@ window.processStats = (snapshot) => {
                 if (!detailedExpenses[branch]) detailedExpenses[branch] = {};
                 detailedExpenses[branch][category] = (detailedExpenses[branch][category] || 0) + rawAmt;
 
-                if (branch === 'Coffee Vendo' || branch.includes('Coffee') || category.toLowerCase().includes('coffee') || category.toLowerCase().includes('vendo cups')) {
+                if (branch === 'Coffee Vendo' || branch.includes('Coffee') ||
+                    category.toLowerCase().includes('coffee') ||
+                    category.toLowerCase().includes('vendo cups') ||
+                    category.toLowerCase().includes('powder') ||
+                    (category.toLowerCase().includes('water') && (branch.includes('Coffee') || branch === 'General'))) {
                     coffeeExp += rawAmt;
                 }
 
